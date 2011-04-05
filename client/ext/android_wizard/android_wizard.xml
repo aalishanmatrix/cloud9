@@ -1,0 +1,94 @@
+<a:application xmlns:a="http://ajax.org/2005/aml">
+	<a:skin id="android_wizard"
+  	src        = "{require('ext/android_wizard/android_wizard').skin}" 
+  	media-path = "/static/ext/android_wizard/images/" />
+	
+    <a:window id="winAndroidWizard"
+      onhide="require('ext/android_wizard/android_wizard').onHide()"
+      title="Configure Android Project"
+      buttons="close" 
+      modal="false" 
+      center="true" 
+      width="350" 
+      kbclose="true">
+        <a:vbox edge="10" padding="5">
+            <a:hbox align="center">
+                <a:label width="95">Project Name</a:label>
+                <a:textbox id="txtAWCreate" flex="1" focusselect="true"/>
+            </a:hbox>                
+            
+                  <a:hbox edge="10" padding="5">
+            <a:fieldset flex="1" caption="Contents">
+                <a:radiobutton group="grpAWContents" skin="classic" checked="true" value="projects" label="Create New Project" />
+                <a:radiobutton group="grpAWContents" skin="classic" checked="false" value="selection" label="Create From Existing Source" />
+                <a:radiobutton group="grpAWContents" skin="classic" checked="false" value="sample" label="Create From Sample" />
+            </a:fieldset>
+                    </a:hbox>
+
+            <a:hbox align="center">
+                <a:label width="95">Build Target</a:label>
+                <a:dropdown id="ddSFPatterns" flex2="1" autoselect="true" maxitems="10" width="213" height="21">
+                    <a:item value="all">All known filetypes</a:item>
+                    <a:item value="actionscript">Actionscript files</a:item>
+                    <a:item value="xml">XML files</a:item>
+                </a:dropdown>
+            </a:hbox>
+            
+                <a:hbox align="center">
+                    <a:label width="95">Application Name</a:label>
+                    <a:textbox id="txtAWAppName" flex="1"/>
+                </a:hbox>
+                
+                <a:hbox align="center">
+                    <a:label width="95">Package Name</a:label>
+                    <a:textbox id="txtAWPackageName" flex="1"/>
+                </a:hbox>
+                <a:hbox align="center">
+                    <a:label width="95">Create Activity</a:label>
+                    <a:textbox id="txtAWActivity" flex="1"/>
+                </a:hbox>
+                
+                <a:hbox align="center">
+                    <a:label width="95">Min SDK Version</a:label>
+                    <a:textbox id="txtAWMinSDK" flex="1"/>
+                </a:hbox>                
+
+            <!--a:hbox id="barReplace" align="center">
+                <a:label width="75">Replace With</a:label>
+                <a:textbox id="txtReplace" flex="1" />
+            </a:hbox-->
+            <a:hbox align="center" padding="5">
+                <a:fieldset flex="1" caption="Options">
+                    <a:checkbox id="chkSFMatchCase" height="20" checked="false" label="Match Case" />
+                    <!--a:checkbox id="chkSFWholeWords" label="Whole Words" /-->
+                    <a:checkbox id="chkSFRegEx" height="20" label="Regular Expressions" />
+                </a:fieldset>
+                <a:fieldset flex="1" caption="Scope">
+                    <a:radiobutton group="grpSFScope" skin="classic" checked="false" value="projects" label="Project" />
+                    <a:radiobutton group="grpSFScope" id="rbSFSelection" skin="classic" checked="true" value="selection" label="Selection" />
+                </a:fieldset>
+            </a:hbox>
+        </a:vbox>
+        <a:divider />
+        <a:hbox padding="5" pack="end" edge="10 10 5 10">
+            <!--a:button id="btnReplace">Replace</a:button>
+            <a:button id="btnReplaceAll">Replace All</a:button-->
+            <a:button id="btnAWCreate" default="2" class="ui-btn-green">Create</a:button>
+            <a:button onclick="winSearchInFiles.hide()">Close</a:button>
+        </a:hbox>
+    </a:window>
+
+    <a:tree id        = "trAWResult"
+      skinset         = "android_wizard"
+      anchors         = "0 0 0 0"
+      border          = "0"
+      visible         = "false"
+      each            = "[d:response[position() &lt; 50]|d:excerpt[position() &lt; 50]|d:maxreached]"
+      loading-message = "Searching..."
+      autoselect      = "false">
+        <a:model />
+        <a:caption match="[d:maxreached]">Your search yielded too many results. The first hits are listed below:</a:caption>
+        <a:caption match="[d:response]">[@path] (#[d:excerpt])</a:caption>
+        <a:caption match="[d:excerpt]"><div class="linenumber">[@line]</div><pre class="excerpt">{apf.htmlentities([text()])}</pre></a:caption>
+    </a:tree>
+</a:application>
