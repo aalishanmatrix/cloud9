@@ -82,6 +82,8 @@ var contentTypes = {
     "rake": "text/x-script.ruby",
     "rb": "text/x-script.ruby",
     
+    "java" : "text/x-java-source",
+
     "c": "text/x-c",
     "cc": "text/x-c",
     "cpp": "text/x-c",
