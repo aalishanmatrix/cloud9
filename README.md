@@ -1,3 +1,7 @@
+## Android Cloud9 Branch
+
+This branch will be used to implement an Android plug-in for Cloud9. Both Java and JavaScript (with PhoneGap) are in scope.
+
 # Cloud9 IDE
 
 The Cloud9 IDE is an open source project started by [ajax.org], built on top of [Node.JS].
