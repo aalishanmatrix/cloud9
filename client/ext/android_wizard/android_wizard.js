@@ -59,6 +59,7 @@ return ext.register("ext/android_wizard/android_wizard", {
         winAndroidWizard.onclose = function() {
             ceEditor.focus();
         };
+                /*
         winAndroidWizard.onshow = function() {
             // get selected node in tree and set it as selection
             var name = _self.getSelectedTreeNode().getAttribute("name");
@@ -66,6 +67,7 @@ return ext.register("ext/android_wizard/android_wizard", {
                 name = name.substr(0, 22) + "...";
             rbSFSelection.setAttribute("label", "Selection ( " + name + " )");
         };
+
         trAWResult.addEventListener("afterselect", function(e) {
             var path,
                 root = trFiles.xmlRoot.selectSingleNode("folder[1]"),
@@ -85,9 +87,10 @@ return ext.register("ext/android_wizard/android_wizard", {
             }
             editors.showFile(root.getAttribute("path") + "/" + path, line, 0, text);
         });
+        */
  //       ide.addEventListener("socketMessage", this.onMessage.bind(this));
     },
-    
+    /*
     getSelectedTreeNode: function() {
         var node = trFiles.selected;
         if (!node)
@@ -96,28 +99,11 @@ return ext.register("ext/android_wizard/android_wizard", {
             node = node.parentNode;
         return node;
     },
-
+*/
     toggleDialog: function(forceShow, data) {
         ext.initExtension(this);
         
-        if (!winAndroidWizard.visible || forceShow || this.$lastState != isReplace) {
-            //this.setupDialog(isReplace);
-            var value = null;            
-            if (data && data.line) {
-                var pos = data.line.indexOf(" ");
-                if (pos > 0) {
-                    value = data.line.slice(pos + 1);
-                }
-            }
-            if (value === null) {
-                var editor = editors.currentEditor;
-                if (editor) {
-                    value  = editor.getDocument().getTextRange(editor.getSelection().getRange());
-                }
-            }
-            if (value) {
-                this.txtFind.setValue(value);
-            }
+        if (!winAndroidWizard.visible || forceShow) {
             winAndroidWizard.show();
         }
         else {
@@ -155,24 +141,9 @@ return ext.register("ext/android_wizard/android_wizard", {
         winAndroidWizard.hide();
         // show the console (also used by the debugger):
         console.enable();
- /*       if (!this.$panel) {
-            this.$panel = tabConsole.add(this.pageTitle, this.pageID);
-            this.$panel.appendChild(trAWResult);
-            trAWResult.setProperty("visible", true);
-            this.$model = trAWResult.getModel(); 
-            var _self = this;
-            // make sure the tab is shown when results come in
-            this.$model.addEventListener("afterload", function() {
-                tabConsole.set(_self.pageID);
-            });
-        }
-        */
+
         // show the tab
         tabConsole.set(this.pageID);
-        var node = this.$currentScope = grpSFScope.value == "projects"
-            ? trFiles.xmlRoot.selectSingleNode("folder[1]")
-            : this.getSelectedTreeNode();
-     //   trAWResult.setAttribute("empty-message", "Nothing returned1");
        
         var data = {
             command : "android_wizard",
@@ -182,18 +153,8 @@ return ext.register("ext/android_wizard/android_wizard", {
         
         ide.socket.send(JSON.stringify(data));
         
-//        this.$model.load("{davProject.report('" + node.getAttribute("path")
-//            + "', 'codesearch', " + JSON.stringify(this.getOptions()) + ")}");
         ide.dispatchEvent("track_action", {type: "android_wizard"});
     },
-    
-    /*
-    onMessage: function(e) {
-        var res,
-            message = e.message;
-
-        util.alert("In android_wizard:onMessage.");
-    },*/
 
     enable : function(){
         this.nodes.each(function(item){
