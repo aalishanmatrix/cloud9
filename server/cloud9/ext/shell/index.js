@@ -14,17 +14,28 @@ var ShellPlugin = module.exports = function(ide) {
     this.ide = ide;
     this.hooks = ["command"];
     this.name = "shell";
-}
+};
 
 sys.inherits(ShellPlugin, Plugin);
 
 (function() {
     this.command = function(user, message, client) {
-        if (!this[message.command])
+        if (this[message.command]) {
+            this[message.command](message);
+        } else if (message.command === 'watcher') { 
             return false;
-
-        this[message.command](message);
-
+        } else {
+            console.log("command", message.command);
+            var _self = this;
+            this.spawnCommand(message.command, message.argv.slice(1), message.cwd, null, null, function(code, err, out) {
+                  _self.sendResult(0, message.command, {
+                          code: code,
+                          argv: message.argv,
+                          err: err,
+                          out: out
+                  });
+            }); 
+        } 
         return true;
     };
 
@@ -103,6 +114,7 @@ sys.inherits(ShellPlugin, Plugin);
              });
     };
 
+/*
     this.pwd =
     this.ls  = function(message) {
         var _self = this;
@@ -115,7 +127,7 @@ sys.inherits(ShellPlugin, Plugin);
             });
         });
     };
-
+*/
     this.cd = function(message) {
         var to    = message.argv.pop(),
             path  = message.cwd || this.ide.workspaceDir,

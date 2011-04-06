@@ -85,11 +85,9 @@ return ext.register("ext/android_wizard/android_wizard", {
             }
             editors.showFile(root.getAttribute("path") + "/" + path, line, 0, text);
         });
-        ide.addEventListener("socketMessage", this.onMessage.bind(this));
+ //       ide.addEventListener("socketMessage", this.onMessage.bind(this));
     },
     
-    
-
     getSelectedTreeNode: function() {
         var node = trFiles.selected;
         if (!node)
@@ -157,24 +155,25 @@ return ext.register("ext/android_wizard/android_wizard", {
         winAndroidWizard.hide();
         // show the console (also used by the debugger):
         console.enable();
-        if (!this.$panel) {
+ /*       if (!this.$panel) {
             this.$panel = tabConsole.add(this.pageTitle, this.pageID);
             this.$panel.appendChild(trAWResult);
             trAWResult.setProperty("visible", true);
-            this.$model = trAWResult.getModel();
+            this.$model = trAWResult.getModel(); 
             var _self = this;
             // make sure the tab is shown when results come in
             this.$model.addEventListener("afterload", function() {
                 tabConsole.set(_self.pageID);
             });
         }
+        */
         // show the tab
         tabConsole.set(this.pageID);
         var node = this.$currentScope = grpSFScope.value == "projects"
             ? trFiles.xmlRoot.selectSingleNode("folder[1]")
             : this.getSelectedTreeNode();
-        trAWResult.setAttribute("empty-message", "Nothing returned1");
-        
+     //   trAWResult.setAttribute("empty-message", "Nothing returned1");
+       
         var data = {
             command : "android_wizard",
             cwd: ide.workspaceDir,
@@ -188,13 +187,13 @@ return ext.register("ext/android_wizard/android_wizard", {
         ide.dispatchEvent("track_action", {type: "android_wizard"});
     },
     
-    
+    /*
     onMessage: function(e) {
         var res,
             message = e.message;
 
         util.alert("In android_wizard:onMessage.");
-    },
+    },*/
 
     enable : function(){
         this.nodes.each(function(item){

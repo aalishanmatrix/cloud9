@@ -380,7 +380,7 @@ return ext.register("ext/console/console", {
                         "lpr": "PC LOAD LETTER",
                         "hello joshua": "How about a nice game of Global Thermonuclear War?",
                         "xyzzy": "Nothing happens.",
-                        "date": "March 32nd",
+                 //       "date": "March 32nd",
                         "hello": "Why hello there!",
                         "who": "Doctor Who?",
                         "su": "God mode activated. Remember, with great power comes great ... aw, screw it, go have fun.",
@@ -480,6 +480,7 @@ return ext.register("ext/console/console", {
             case "git":
             case "pwd":
             case "ls":
+            default:
                 res = message.body;
                 //this.getPrompt() + " " + res.argv.join(" ") + "\n" + 
                 this.logNodeStream(res.out || res.err);
