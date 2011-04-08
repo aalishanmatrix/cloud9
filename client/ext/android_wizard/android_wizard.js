@@ -59,47 +59,8 @@ return ext.register("ext/android_wizard/android_wizard", {
         winAndroidWizard.onclose = function() {
             ceEditor.focus();
         };
-                /*
-        winAndroidWizard.onshow = function() {
-            // get selected node in tree and set it as selection
-            var name = _self.getSelectedTreeNode().getAttribute("name");
-            if (name.length > 25)
-                name = name.substr(0, 22) + "...";
-            rbSFSelection.setAttribute("label", "Selection ( " + name + " )");
-        };
+    },
 
-        trAWResult.addEventListener("afterselect", function(e) {
-            var path,
-                root = trFiles.xmlRoot.selectSingleNode("folder[1]"),
-                node = trAWResult.selected,
-                line = 0,
-                text = "";
-            if (node.tagName == "d:maxreached")
-                return;
-            if (node.tagName == "d:excerpt") {
-                path = node.parentNode.getAttribute("path");
-                line = node.getAttribute("line");
-                text = node.parentNode.getAttribute("query");
-            }
-            else {
-                path = node.getAttribute("path");
-                text = node.getAttribute("query");
-            }
-            editors.showFile(root.getAttribute("path") + "/" + path, line, 0, text);
-        });
-        */
- //       ide.addEventListener("socketMessage", this.onMessage.bind(this));
-    },
-    /*
-    getSelectedTreeNode: function() {
-        var node = trFiles.selected;
-        if (!node)
-            node = trFiles.xmlRoot.selectSingleNode("folder[1]");
-        while (node.tagName != "folder")
-            node = node.parentNode;
-        return node;
-    },
-*/
     toggleDialog: function(forceShow, data) {
         ext.initExtension(this);
         
@@ -151,8 +112,7 @@ return ext.register("ext/android_wizard/android_wizard", {
             options : this.getOptions()
         };            
         
-        ide.socket.send(JSON.stringify(data));
-        
+        ide.socket.send(JSON.stringify(data));        
         ide.dispatchEvent("track_action", {type: "android_wizard"});
     },
 
