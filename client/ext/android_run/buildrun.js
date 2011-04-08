@@ -29,11 +29,13 @@ var Buildrun = (function() {
            
             var data = {
                 command : "android_build",
-                invoke: "ant debug"
+                cwd: ide.workspaceDir,
+                invoke: "ant",
+                args: ["debug"]
             };            
             
             ide.socket.send(JSON.stringify(data));        
-            ide.dispatchEvent("track_action", {type: "android_build"});
+            ide.dispatchEvent("track_action", {type: "android_run"});
         },
         
         build_done: function() {

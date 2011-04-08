@@ -481,6 +481,7 @@ return ext.register("ext/console/console", {
             case "pwd":
             case "ls":
             default:
+                this.log("XXXXXX " + message.subtype + " XXXXXX");
                 res = message.body;
                 //this.getPrompt() + " " + res.argv.join(" ") + "\n" + 
                 this.logNodeStream(res.out || res.err);
