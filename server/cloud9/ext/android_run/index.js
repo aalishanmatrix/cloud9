@@ -6,34 +6,104 @@
  * @license TBD
  */
 var Plugin = require("cloud9/plugin");
-var Path = require("path");
-var fs = require("fs");
 var sys = require("sys");
-var Async  = require("async");
+var fs = require("fs");
 
 var AndroidRunPlugin = module.exports = function(ide) {
     this.ide = ide;
     this.hooks = ["command"];
     this.name = "android_run";
-
 };
 
 sys.inherits(AndroidRunPlugin, Plugin);
 
 (function() {
-    
     this.command = function(user, message, client) {
-        if (message.command != "android_build")
+        if (message.command !== "android_run") {
             return false;
-            
+        }
+        this.validate(message);
+    };
+    
+    this.validate = function(message) {
         var _self = this;
+        
+        fs.readFile(message.cwd + "/AndroidManifest.xml",'utf8', function(e, data) {
+            var packageName, activity;
+            var fail = false;
+            if (e) {
+                fail = true;
+            } else {
+                packageName = _self.getFromAndroidXml(data, 'package');
+                if (!packageName) { 
+                    fail = true;
+                } else {
+                    activity = _self.getFromAndroidXml(data, 'activity android:name');
+                    if (!activity) {
+                        fail = true;
+                    }
+                }
+            }
+            if (fail) {
+                _self.sendResult(0, "android_validate", {
+                    out: "Invalid Android project: Failed to get activity name from " + message.cwd + '/AndroidManifest.xml'
+                });                
+            } else {
+                _self.activityString = packageName + '/' + packageName + '.' + activity;
+                console.log("Activity is ", _self.activityString);
+                _self.build(_self, message);
+            }
+        });
+    };
+    
+    this.getFromAndroidXml = function(contents, key) {
+         var index = contents.indexOf(key);
+         if (index === -1) return null;
+         index += key.length + 2;  // skip past key and ="
+         var endIndex = contents.indexOf('"', index);
+         if (endIndex === -1) return null;
+         return contents.substring(index, endIndex);
+    };
+         
+    this.build = function(_self, message) {
         this.spawnCommand(message.invoke, message.args, message.cwd, null, null, function(code, err, out) {
-            _self.sendResult(0, message.command, {
-                code: code,
-                argv: message.argv,
+            var index = out.indexOf('BUILD SUCCESSFUL');
+            if (index === -1) { 
+                /* Build failed, so send log back to console */
+                _self.sendResult(0, "android_build", {
+                    err: err,
+                    out: out
+                });
+            } else {
+                _self.deploy(_self, message.cwd, index, out);
+            }
+        });
+    };
+    
+    this.deploy = function(_self, cwd, index, buildLog) {      
+        var packageIndex = buildLog.indexOf("Debug Package:") + "Debug Package:".length + 1;
+        var fileName = buildLog.substr(packageIndex, index - packageIndex - 2);
+        console.log("installing file ", fileName);
+        _self.spawnCommand("adb", ["install", "-r", fileName], cwd, null, null, function(code, err, out) {                    
+            if (out.indexOf('Success') === -1) {
+                /* Deploy failed */                    
+                _self.sendResult(0, "android_deploy", {
+                    err: err,
+                    out: out
+                });
+            } else {
+                _self.run(_self, cwd);
+            }
+        });
+    };
+    
+    this.run = function(_self, cwd) {
+        _self.spawnCommand("adb", ["shell", "am", "start", "-n", _self.activityString], cwd, null, null, function(code, err, out) {                                      
+            _self.sendResult(0, "android_run", {
                 err: err,
                 out: out
             });
         });
     };
+    
 }).call(AndroidRunPlugin.prototype);

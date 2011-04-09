@@ -28,7 +28,7 @@ var Buildrun = (function() {
             tabConsole.set(this.pageID);
            
             var data = {
-                command : "android_build",
+                command : "android_run",
                 cwd: ide.workspaceDir,
                 invoke: "ant",
                 args: ["debug"]

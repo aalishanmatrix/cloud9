@@ -6,16 +6,12 @@
  * @license TBD
  */
 var Plugin = require("cloud9/plugin");
-var Path = require("path");
-var fs = require("fs");
 var sys = require("sys");
-var Async  = require("async");
 
 var AndroidWizardPlugin = module.exports = function(ide) {
     this.ide = ide;
     this.hooks = ["command"];
     this.name = "android_wizard";
-
 };
 
 sys.inherits(AndroidWizardPlugin, Plugin);
