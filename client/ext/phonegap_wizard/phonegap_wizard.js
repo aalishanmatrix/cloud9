@@ -1,5 +1,5 @@
 /**
- * Android Wizard Module for the Cloud9 IDE
+ * PhoneGap Wizard Module for the Cloud9 IDE
  *
  * @copyright 2011, Mobile Developer Solutions
  * @author Paul Beusterien
@@ -14,11 +14,11 @@ define(function(require, exports, module) {
  var canon = require("pilot/canon");
  var editors = require("ext/editors/editors");
  var console = require("ext/console/console");
- var skin = require("text!ext/android_wizard/skin.xml");
- var markup = require("text!ext/android_wizard/android_wizard.xml");
+ var skin = require("text!ext/phonegap_wizard/skin.xml");
+ var markup = require("text!ext/phonegap_wizard/phonegap_wizard.xml");
   
-return ext.register("ext/android_wizard/android_wizard", {
-    name     : "Android Wizard",
+return ext.register("ext/phonegap_wizard/phonegap_wizard", {
+    name     : "phonegap Wizard",
     dev      : "mobiledevelopersolutions.com",
     type     : ext.GENERAL,
     alone    : true,
@@ -26,10 +26,10 @@ return ext.register("ext/android_wizard/android_wizard", {
     markup   : markup,
     skin     : skin,
     commands  : {
-        "android_wizard": {hint: "configure an Android Project"}
+        "phonegap_wizard": {hint: "configure an phonegap Project"}
     },
-    pageTitle: "Android Project Creation Log",
-    pageID   : "pgAWResults",
+    pageTitle: "Phonegap Project Creation Log",
+    pageID   : "pgPWResults",
     hotitems : {},
 
     nodes    : [],
@@ -40,23 +40,23 @@ return ext.register("ext/android_wizard/android_wizard", {
         this.nodes.push(
             mnuFile.appendChild(new apf.divider()),
             mnuFile.appendChild(new apf.item({
-                caption : "Create Android Project",
+                caption : "Create PhoneGap for Android Project",
                 onclick : function() {
                     _self.toggleDialog(false);
                 }
             }))
         );
         
-        this.hotitems["android_wizard"] = [this.nodes[1]];
+        this.hotitems["phonegap_wizard"] = [this.nodes[1]];
     },
 
     init : function(amlNode){
 
-        this.btnCreate = btnAWCreate;
+        this.btnCreate = btnPWCreate;
         this.btnCreate.onclick = this.execCreate.bind(this);
 
         var _self = this;
-        winAndroidWizard.onclose = function() {
+        winPhonegapWizard.onclose = function() {
             ceEditor.focus();
         };
     },
@@ -64,11 +64,11 @@ return ext.register("ext/android_wizard/android_wizard", {
     toggleDialog: function(forceShow, data) {
         ext.initExtension(this);
         
-        if (!winAndroidWizard.visible || forceShow) {
-            winAndroidWizard.show();
+        if (!winPhonegapWizard.visible || forceShow) {
+            winPhonegapWizard.show();
         }
         else {
-            winAndroidWizard.hide();
+            winPhonegapWizard.hide();
         }
         return false;
     },
@@ -79,7 +79,7 @@ return ext.register("ext/android_wizard/android_wizard", {
             editor.ceEditor.focus();
     },
 
-    android_wizard: function(data) {
+    phonegap_wizard: function(data) {
         return this.toggleDialog(true, data);
     },
 
@@ -91,16 +91,15 @@ return ext.register("ext/android_wizard/android_wizard", {
 
     getOptions: function() {
         return {
-            projectName : txtAWProjectName.value,
-            appName : txtAWAppName.value,
-            packageName : txtAWPackageName.value,
-            activity : txtAWActivity.value,
-            minSDK : txtAWMinSDK.value
+            appName : txtPWAppName.value,
+            packageName : txtPWPackageName.value,
+            activity : txtPWActivity.value,
+            minSDK : txtPWMinSDK.value
         };
     },
 
     execCreate: function() {
-        winAndroidWizard.hide();
+        winPhonegapWizard.hide();
         // show the console (also used by the debugger):
         console.enable();
 
@@ -108,13 +107,13 @@ return ext.register("ext/android_wizard/android_wizard", {
         tabConsole.set(this.pageID);
        
         var data = {
-            command : "android_wizard",
+            command : "phonegap_wizard",
             cwd: ide.workspaceDir,
             options : this.getOptions()
         };            
         
         ide.socket.send(JSON.stringify(data));        
-        ide.dispatchEvent("track_action", {type: "android_wizard"});
+        ide.dispatchEvent("track_action", {type: "phonegap_wizard"});
     },
 
     enable : function(){

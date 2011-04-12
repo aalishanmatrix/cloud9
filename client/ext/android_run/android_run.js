@@ -17,18 +17,18 @@ var markup = require("text!ext/android_run/android_run.xml");
 var buildrun = new Buildrun();
 
 return ext.register("ext/android_run/android_run", {
-    name    : "Run Toolbar",
+    name    : "Android Run Toolbar",
     dev     : "Ajax.org",
     type    : ext.GENERAL,
     alone   : true,
     offline : false,
     markup  : markup,
-    commands : {
+ /*   commands : {
         "resume"   : {hint: "resume the current paused process"},
         "stepinto" : {hint: "step into the function that is next on the execution stack"},
         "stepover" : {hint: "step over the current expression on the execution stack"},
         "stepout"  : {hint: "step out of the current function scope"}
-    },
+    },*/
     hotitems: {},
 
     nodes : [],
@@ -58,9 +58,9 @@ return ext.register("ext/android_run/android_run", {
         });
 
         ide.addEventListener("loadsettings", function(e){
-            var runConfigs = e.model.queryNode("auto/configurations");
+            var runConfigs = e.model.queryNode("auto/androidconfigs");
             if (!runConfigs)
-                runConfigs = apf.createNodeFromXpath(e.model.data, "auto/configurations");
+                runConfigs = apf.createNodeFromXpath(e.model.data, "auto/androidconfigs");
 
             mdlAndroidRunConfigurations.load(runConfigs);
         });
@@ -83,12 +83,12 @@ return ext.register("ext/android_run/android_run", {
 
     addConfig : function() {
         var file = ide.getActivePageModel();
+        var path, name;
 
-        if (!file || (file.getAttribute("contenttype") || "").indexOf("application/javascript") != 0) {
-            var path = "";
-            var name = "server";
-        }
-        else {
+        if (!file) {   
+            path = "";
+            name = "replace me with an Android project name";
+        } else {
             path = file.getAttribute("path").slice(ide.davPrefix.length + 1);
             name = file.getAttribute("name").replace(/\.js$/, "");
         }
@@ -109,21 +109,18 @@ return ext.register("ext/android_run/android_run", {
     },
 
     run : function(debug) {
-        buildrun.buildrun(debug);
-        /*
         var config = lstRunCfg.selected;
         mdlRunConfigurations.data.setAttribute("debug", debug ? "1": "0");
         if (!config) {
             this.addConfig();
-        }
-        else { 
+        } else { 
             this.runConfig(config, debug);
             ide.dispatchEvent("track_action", {type: debug ? "debug" : "run"});
-        } */
+        } 
     },
 
     $updateMenu : function() {
-        var menus = [mnuAndroidRunCfg, mnuAndroidDebugCfg];
+        var menus = [mnuAndroidRunCfg /*, mnuAndroidDebugCfg */];
 
         for (var j=0; j<menus.length; j++) {
             var menu = menus[j];
@@ -148,8 +145,8 @@ return ext.register("ext/android_run/android_run", {
                     var _self = this;
                     item.onclick = function(debug) {
                         _self.runConfig(this.$config, debug);
-                        lstRunCfg.select(this.$config);
-                    }.bind(item, menu == mnuAndroidDebugCfg);
+                        lstAndroidRunCfg.select(this.$config);
+                    }.bind(item, false /*menu == mnuAndroidDebugCfg*/);
                     menu.insertBefore(item, menu.firstChild);
                 }
             }
@@ -165,6 +162,7 @@ return ext.register("ext/android_run/android_run", {
             debug = config.parentNode.getAttribute("debug") == "1";
 
         config.parentNode.setAttribute("debug", "0");
+        buildrun.buildrun(debug, config.getAttribute("name"));
  //       noderunner.run(config.getAttribute("path"), config.getAttribute("args").split(" "), debug);
     },
 

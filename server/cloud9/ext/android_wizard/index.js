@@ -38,7 +38,7 @@ sys.inherits(AndroidWizardPlugin, Plugin);
         args[4] = "--name";
         args[5] = message.options.appName;
         args[6] = "--path";
-        args[7] = message.cwd;
+        args[7] = message.cwd + '/' + message.options.projectName;
         args[8] = "--activity";
         args[9] = message.options.activity;
         args[10] = "--package";

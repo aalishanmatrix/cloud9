@@ -17,11 +17,8 @@ var Buildrun = (function() {
     }
     
     Buildrun.prototype = {
-        buildrun : function (debug) {
-            this.build();
-        },
-        
-        build : function () {
+        buildrun : function (debug, name) {
+
             console.enable();
     
             // show the tab
@@ -29,7 +26,7 @@ var Buildrun = (function() {
            
             var data = {
                 command : "android_run",
-                cwd: ide.workspaceDir,
+                cwd: ide.workspaceDir + '/' + name,
                 invoke: "ant",
                 args: ["debug"]
             };            

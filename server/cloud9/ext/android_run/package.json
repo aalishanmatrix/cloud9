@@ -1,6 +1,6 @@
 {
-    "name": "android_build",
-    "description": "android_build loader.",
+    "name": "android_run",
+    "description": "android_run loader.",
     "version": "0.1",
     "author": "Paul Beusterien - Mobile Developer Solutions"
 }

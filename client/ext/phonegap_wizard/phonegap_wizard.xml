@@ -1,11 +1,11 @@
 <a:application xmlns:a="http://ajax.org/2005/aml">
-	<a:skin id="android_wizard"
-  	src        = "{require('ext/android_wizard/android_wizard').skin}" 
-  	media-path = "/static/ext/android_wizard/images/" />
+	<a:skin id="phonegap_wizard"
+  	src        = "{require('ext/phonegap_wizard/phonegap_wizard').skin}" 
+  	media-path = "/static/ext/phonegap_wizard/images/" />
 	
-    <a:window id="winAndroidWizard"
-      onhide="require('ext/android_wizard/android_wizard').onHide()"
-      title="Configure Android Project"
+    <a:window id="winPhonegapWizard"
+      onhide="require('ext/phonegap_wizard/phonegap_wizard').onHide()"
+      title="Configure Phonegap Project"
       buttons="close" 
       modal="false" 
       center="true" 
@@ -14,14 +14,14 @@
         <a:vbox edge="10" padding="5">
             <a:hbox align="center">
                 <a:label width="95">Project Name</a:label>
-                <a:textbox id="txtAWProjectName" flex="1" focusselect="true"/>
+                <a:textbox id="txtPWCreate" flex="1" focusselect="true"/>
             </a:hbox>                
             
                   <a:hbox edge="10" padding="5">
             <a:fieldset flex="1" caption="Contents">
-                <a:radiobutton group="grpAWContents" skin="classic" checked="true" value="projects" label="Create New Project" />
-                <a:radiobutton group="grpAWContents" skin="classic" checked="false" value="selection" label="Create From Existing Source" />
-                <a:radiobutton group="grpAWContents" skin="classic" checked="false" value="sample" label="Create From Sample" />
+                <a:radiobutton group="grpPWContents" skin="classic" checked="true" value="projects" label="Create New Project" />
+                <a:radiobutton group="grpPWContents" skin="classic" checked="false" value="selection" label="Create From Existing Source" />
+                <a:radiobutton group="grpPWContents" skin="classic" checked="false" value="sample" label="Create From Sample" />
             </a:fieldset>
                     </a:hbox>
 
@@ -36,28 +36,28 @@
             
                 <a:hbox align="center">
                     <a:label width="95">Application Name</a:label>
-                    <a:textbox id="txtAWAppName" flex="1"/>
+                    <a:textbox id="txtPWAppName" flex="1"/>
                 </a:hbox>
                 
                 <a:hbox align="center">
                     <a:label width="95">Package Name</a:label>
-                    <a:textbox id="txtAWPackageName" flex="1"/>
+                    <a:textbox id="txtPWPackageName" flex="1"/>
                 </a:hbox>
                 <a:hbox align="center">
                     <a:label width="95">Create Activity</a:label>
-                    <a:textbox id="txtAWActivity" flex="1"/>
+                    <a:textbox id="txtPWActivity" flex="1"/>
                 </a:hbox>
                 
                 <a:hbox align="center">
                     <a:label width="95">Min SDK Version</a:label>
-                    <a:textbox id="txtAWMinSDK" flex="1"/>
+                    <a:textbox id="txtPWMinSDK" flex="1"/>
                 </a:hbox>                
 
         </a:vbox>
         <a:divider />
         <a:hbox padding="5" pack="end" edge="10 10 5 10">
-            <a:button id="btnAWCreate" default="2" class="ui-btn-green">Create</a:button>
-            <a:button onclick="winAndroidWizard.hide()">Close</a:button>
+            <a:button id="btnPWCreate" default="2" class="ui-btn-green">Create</a:button>
+            <a:button onclick="winPhonegapWizard.hide()">Close</a:button>
         </a:hbox>
     </a:window>
 

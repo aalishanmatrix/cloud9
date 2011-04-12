@@ -1,5 +1,5 @@
 /**
- * Android Build Module for the Cloud9 IDE
+ * Android Build, Deploy and Run Module for the Cloud9 IDE
  *
  * @copyright 2011, Mobile Developer Solutions
  * @author Paul Beusterien

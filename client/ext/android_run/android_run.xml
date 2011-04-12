@@ -9,15 +9,15 @@
         <a:divider></a:divider>
         <a:item onclick="require('ext/android_run/android_run').showRunConfigs(false)">Run Configurations ...</a:item>
     </a:menu>
-    
+        <!--
     <a:menu id="mnuAndroidDebugCfg">	
         <a:item disabled="true" caption="no run history" />
         <a:divider></a:divider>
         <a:item onclick="require('ext/android_run/android_run').showRunConfigs(true)">Run Configurations ...</a:item>
-    </a:menu>
+    </a:menu>/-->
     
     <a:window id="winAndroidRunCfgNew" 
-      title="New AndroidRun Configuration - TBD" 
+      title="New Android Run Configuration" 
       model="{lstAndroidRunCfg.selected}"
       buttons="close" 
       modal="false"
@@ -25,17 +25,74 @@
       width="350"
       height="400"
       kbclose="true">
-
+        <a:vbox anchors="0 0 0 0">
+        <a:toolbar>
+            <a:bar>
+            <a:button
+              icon="debugger/monitorexpression_tsk{this.disabled ? '_disabled' : ''}.gif"
+              caption="Add"
+              onclick="require('ext/android_run/android_run').addConfig()"/>
+            <a:button 
+              icon="debugger/copy_edit_co{this.disabled ? '_disabled' : ''}.gif" 
+              caption="Duplicate"
+              onclick="require('ext/android_run/android_run').duplicate()"
+              disabled="{!lstAndroidRunCfg.selected}"/>
+            <a:button 
+              icon="debugger/delete_config{this.disabled ? '_disabled' : ''}.gif"
+              caption="Remove"
+              onclick="lstAndroidRunCfg.remove()"
+              disabled="{!lstAndroidRunCfg.selected}"/>
+            </a:bar>
+        </a:toolbar>
+        <a:list id="lstAndroidRunCfg" 
+          skin="lineselect"
+          model="mdlAndroidRunConfigurations"
+          each="[config]"
+          caption="[@name]"
+          empty-message="no run configurations"
+          autoselect="true"
+          flex="1"/>    			
+            <a:divider />
+            <a:hbox align="center" margin="5 10 5 10" padding="10">
+                <a:label width="130" textalign="right">Name</a:label>
+                <a:textbox id="txtAndroidRunCfgName" 
+                  flex="1"
+                  realtime="true"
+                  value="[@name]"
+                  disabled="{!lstAndroidRunCfg.selected}"/>
+            </a:hbox>
+            <a:divider />
+            <a:hbox align="center" margin="5 10" padding="10">
+                <a:label width="130" textalign="right">JavaScript file</a:label>
+                <a:textbox id="txtAndroidRunCfgName" flex="1" value="[@path]" disabled="{!lstAndroidRunCfg.selected}"/>
+                <a:button icon="folder.png" disabled="true" tooltip="Browse ..."></a:button>
+            </a:hbox>
+            <a:hbox align="center" margin="5 10" padding="10">
+                <a:label width="130" textalign="right">Command line arguments</a:label>
+                <a:textbox id="txtAndroidRunCfgName" flex="1" value="[@args]" disabled="{!lstAndroidRunCfg.selected}"/>
+            </a:hbox>
+            <a:divider />
+            <a:hbox padding="5" pack="end" edge="10 10 5 10">
+                <a:button 
+                  default="2" 
+                  class="ui-btn-green" 
+                  onclick="require('ext/android_run/android_run').runConfig(lstAndroidRunCfg.selected, mdlAndroidRunConfigurations.data.getAttribute('debug') === '1');winAndroidRunCfgNew.hide()"
+                  disabled="{!lstAndroidRunCfg.selected}"
+                  caption="AndroidRun"/>
+                <a:button onclick="winAndroidRunCfgNew.hide()">Close</a:button>
+            </a:hbox>        
+        </a:vbox>
     </a:window>
-        
+  
     <a:bar id="tbAndroidRun">
-        <a:divider skin="c9-divider" />  
+        <a:divider skin="c9-divider" /> 
+                     <!--
         <a:splitbutton id="btnDebug"
           icon     = "bug.png"
           caption  = "android_debug"
           onclick  = "require('ext/android_run/android_run').run(true)"
           disabled = "{stProcessRunning.active and 1}"
-          submenu  = "mnuAndroidDebugCfg" /> 
+          submenu  = "mnuAndroidDebugCfg" /> /-->
         <a:splitbutton
           icon     = "run.png"
           caption  = "android_run"
