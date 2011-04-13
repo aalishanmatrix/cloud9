@@ -11,19 +11,27 @@
       center="true" 
       width="350" 
       kbclose="true">
-        <a:vbox edge="10" padding="5">
+      
+      <a:vbox edge="10" padding="5">
             <a:hbox align="center">
                 <a:label width="95">Project Name</a:label>
-                <a:textbox id="txtPWCreate" flex="1" focusselect="true"/>
+                <a:textbox id="txtPWProjectName" flex="1" focusselect="true"/>
             </a:hbox>                
-            
-                  <a:hbox edge="10" padding="5">
-            <a:fieldset flex="1" caption="Contents">
-                <a:radiobutton group="grpPWContents" skin="classic" checked="true" value="projects" label="Create New Project" />
-                <a:radiobutton group="grpPWContents" skin="classic" checked="false" value="selection" label="Create From Existing Source" />
-                <a:radiobutton group="grpPWContents" skin="classic" checked="false" value="sample" label="Create From Sample" />
-            </a:fieldset>
-                    </a:hbox>
+             
+            <a:hbox align="center"> 
+            <a:vbox edge="10" padding="5">
+                <a:label>PhoneGap Location</a:label>
+                <a:hbox>
+                <a:fieldset flex="1">
+                    <a:radiobutton group="grpPWConfig" skin="classic" checked="true" value="builtin" label="Use Built-in PhoneGap - version 0.9.4" />
+                    <a:radiobutton group="grpPWConfig" id="rbPWconfigChoose" skin="classic" checked="false" value="choose" label="Enter path to installed PhoneGap" />
+                </a:fieldset>
+                </a:hbox>
+                <a:hbox  >
+                <input id="inpPWPgFile" type="file" visible="{grpPWConfig.value == 'choose'}" />
+                </a:hbox>
+            </a:vbox>
+            </a:hbox>
 
             <a:hbox align="center">
                 <a:label width="95">Build Target</a:label>
@@ -36,22 +44,17 @@
             
                 <a:hbox align="center">
                     <a:label width="95">Application Name</a:label>
-                    <a:textbox id="txtPWAppName" flex="1"/>
+                    <a:textbox id="txtPWAppName" value='foo' flex="1"/>
                 </a:hbox>
                 
                 <a:hbox align="center">
                     <a:label width="95">Package Name</a:label>
-                    <a:textbox id="txtPWPackageName" flex="1"/>
+                    <a:textbox id="txtPWPackageName" value="{grpPWConfig.value}" flex="1"/>
                 </a:hbox>
                 <a:hbox align="center">
                     <a:label width="95">Create Activity</a:label>
-                    <a:textbox id="txtPWActivity" flex="1"/>
-                </a:hbox>
-                
-                <a:hbox align="center">
-                    <a:label width="95">Min SDK Version</a:label>
-                    <a:textbox id="txtPWMinSDK" flex="1"/>
-                </a:hbox>                
+                    <a:textbox id="txtPWActivity" value="{document.getElementById('inpPWPgFile').value}" flex="1"/>
+                </a:hbox>             
 
         </a:vbox>
         <a:divider />

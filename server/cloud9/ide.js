@@ -86,6 +86,7 @@ Ide.DEFAULT_PLUGINS = [
     "ext/html/html",
     "ext/android_wizard/android_wizard",
     "ext/android_run/android_run",
+    "ext/phonegap_wizard/phonegap_wizard",
     "ext/browser/browser",
     "ext/code/code",
     "ext/imgview/imgview",

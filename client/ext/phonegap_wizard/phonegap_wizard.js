@@ -18,7 +18,7 @@ define(function(require, exports, module) {
  var markup = require("text!ext/phonegap_wizard/phonegap_wizard.xml");
   
 return ext.register("ext/phonegap_wizard/phonegap_wizard", {
-    name     : "phonegap Wizard",
+    name     : "PhoneGap Wizard",
     dev      : "mobiledevelopersolutions.com",
     type     : ext.GENERAL,
     alone    : true,
@@ -26,9 +26,9 @@ return ext.register("ext/phonegap_wizard/phonegap_wizard", {
     markup   : markup,
     skin     : skin,
     commands  : {
-        "phonegap_wizard": {hint: "configure an phonegap Project"}
+        "phonegap_wizard": {hint: "configure a PhoneGap Project"}
     },
-    pageTitle: "Phonegap Project Creation Log",
+    pageTitle: "PhoneGap Project Creation Log",
     pageID   : "pgPWResults",
     hotitems : {},
 
@@ -91,10 +91,10 @@ return ext.register("ext/phonegap_wizard/phonegap_wizard", {
 
     getOptions: function() {
         return {
+            projectName : txtPWProjectName.value,
             appName : txtPWAppName.value,
             packageName : txtPWPackageName.value,
-            activity : txtPWActivity.value,
-            minSDK : txtPWMinSDK.value
+            activity : txtPWActivity.value
         };
     },
 
