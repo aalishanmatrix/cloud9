@@ -26,7 +26,9 @@ exports.main = function(options) {
         // load plugins:
         var exts = {};
         Fs.readdirSync(Path.normalize(__dirname + "/ext")).forEach(function(name){
-            exts[name] = require("./ext/" + name);
+            if (name[0] != '.') { // ignore hidden files like .DS_Store
+                exts[name] = require("./ext/" + name);
+            }
         });
         
         // create web socket
