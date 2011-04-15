@@ -24,7 +24,8 @@
                 <a:hbox>
                 <a:fieldset flex="1">
                     <a:radiobutton group="grpPWConfig" skin="classic" checked="true" value="builtin" label="Use Built-in PhoneGap - version 0.9.4" />
-                    <a:radiobutton group="grpPWConfig" id="rbPWconfigChoose" skin="classic" checked="false" value="choose" label="Enter path to installed PhoneGap" />
+                    <a:radiobutton group="grpPWConfig" skin="classic" checked="true" value="builtin" label="Enter PhoneGap GitHub location" />
+                    <a:radiobutton group="grpPWConfig" skin="classic" checked="false" value="choose" label="Enter path to PhoneGap zipfile" />
                 </a:fieldset>
                 </a:hbox>
                 <a:hbox  >
