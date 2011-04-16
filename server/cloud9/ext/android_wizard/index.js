@@ -18,8 +18,8 @@ sys.inherits(AndroidWizardPlugin, Plugin);
 
 (function() {
     
-    this.command = function(user, message, client) {
-        if (message.command != "android_wizard")
+    this.command = function(user, message, client, phonegap_callback) {
+        if (message.command !== "android_wizard")
             return false;
             
         /**
@@ -48,12 +48,16 @@ sys.inherits(AndroidWizardPlugin, Plugin);
             
         var _self = this;
         this.spawnCommand("android", args, message.cwd, null, null, function(code, err, out) {
-            _self.sendResult(0, message.command, {
-                code: code,
-                argv: message.argv,
-                err: err,
-                out: out
-            });
+            if (code === 0 && phonegap_callback) {  // If success and making PhoneGap project
+                phonegap_callback(code, err, out);
+            } else {
+                _self.sendResult(0, message.command, {
+                    code: code,
+                    argv: message.argv,
+                    err: err,
+                    out: out
+                });
+            }
         });
     };
 }).call(AndroidWizardPlugin.prototype);
