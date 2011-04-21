@@ -46,7 +46,7 @@ sys.inherits(AndroidRunPlugin, Plugin);
             }
             if (fail) {
                 _self.sendResult(0, "android_validate", {
-                    out: "Invalid Android project: Failed to get activity name from " + message.cwd + '/AndroidManifest.xml'
+                    out: "Invalid Android project: Failed to get activity name from " + message.cwd + '/AndroidManifest.xml' + e
                 });                
             } else {
                 _self.activityString = packageName + '/' + packageName + '.' + activity;

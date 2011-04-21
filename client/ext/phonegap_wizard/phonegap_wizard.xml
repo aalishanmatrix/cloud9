@@ -50,11 +50,11 @@
                 
                 <a:hbox align="center">
                     <a:label width="95">Package Name</a:label>
-                    <a:textbox id="txtPWPackageName" value="{grpPWConfig.value}" flex="1"/>
+                    <a:textbox id="txtPWPackageName" value="com.{grpPWConfig.value}" flex="1"/>
                 </a:hbox>
                 <a:hbox align="center">
                     <a:label width="95">Create Activity</a:label>
-                    <a:textbox id="txtPWActivity" value="{document.getElementById('inpPWPgFile').value}" flex="1"/>
+                    <a:textbox id="txtPWActivity" value="act{document.getElementById('inpPWPgFile').value}" flex="1"/>
                 </a:hbox>             
 
         </a:vbox>

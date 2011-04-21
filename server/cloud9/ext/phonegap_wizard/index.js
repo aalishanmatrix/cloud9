@@ -8,6 +8,7 @@
 var Plugin = require("cloud9/plugin");
 var sys = require("sys");
 var async = require("asyncjs");
+var fs = require("fs");
 
 var PhonegapWizardPlugin = module.exports = function(ide) {
     this.ide = ide;
@@ -28,21 +29,22 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
             console.log("Error creating PhoneGap project. Template copy failed. " + err);
         });
         */
+        this.projectDir = message.cwd + '/' + message.options.projectName;
         _self = this;
         var android_message = message;
         android_message.command = "android_wizard";
-        this.ide.exts.android_wizard.command(user, android_message, client, this.afterAndroid);
+        this.ide.exts.android_wizard.command(user, android_message, client, this.afterAndroid, _self);
     };
     
     this.afterAndroid = function(code, err, out) {
-        console.log("Got here" + code + 'err: ' + err + 'out: ' + out + 'cwd: ' + message.cwd);
+        console.log("Got here" + code + 'err: ' + err + 'out: ' + out + 'cwd: ' + _self.projectDir);
         
         // First, find and update the Java Main file
-        this.findJavaFile(this, this.projectDir = message.cwd);
-        this.getPhonegapJar();
-        this.getWWWSources();
-        this.phonegapizeAndroidManifest(this);
-        this.getResFiles();
+        _self.findJavaFile(_self, _self.projectDir);
+        _self.getPhonegapJar();
+        _self.getWWWSources(_self);
+        _self.phonegapizeAndroidManifest(_self);
+        _self.getResFiles();
     };
     
     // Recursively search for java file. Assuming there is only one in the new
@@ -55,15 +57,16 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
                 return;
             }
             filenames.forEach(function (filename) {
-                fs.stat(filename, function (err, stat) {
+                var fullname = dir + '/' + filename;
+                fs.stat(fullname, function (err, stat) {
                     if (err) {
-                        console.log("findJavaFile: Error opening file: " + filename + ". Error: " + err);
+                        console.log("findJavaFile: Error opening file: " + fullname + ". Error: " + err);
                         return;
                     }
                     if (stat.isDirectory()) {
-                        _self.findJavaFile(_self, filename);
+                        _self.findJavaFile(_self, fullname);
                     } else if (/\.java$/.test(filename)) {
-                        _self.updateJavaMain(_self,filename);
+                        _self.updateJavaMain(_self,fullname);
                     }
                 });
             });          
@@ -71,12 +74,11 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
     };
     
     this.updateJavaMain = function(_self, filename) {
-        fs.readFile(filename,'utf8', function(e, data) {
-            if (e) console.log("updateJavaMain: Error reading file: " + filename + ". Error: " + err);
+        fs.readFile(filename,'utf8', function(err, data) {
+            if (err) console.log("updateJavaMain: Error reading file: " + filename + ". Error: " + err);
             
             // Import com.phonegap instead of Activity
-            data = data.replace("import android.app.Activity;",
-                    "import com.phonegap.*;");
+            data = data.replace("import android.app.Activity;", "import com.phonegap.*;");
     
             // Change superclass to DroidGap instead of Activity
             data = data.replace("extends Activity", "extends DroidGap");
@@ -97,23 +99,35 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
         // TODO research classpath changes
     };
     
-    this.getWWWSources = function() {
-        async.copyfile(__dirname + "Resources/phonegap/Sample/", _self.projectDir + "/assets/www/", function (err) {
-            console.log("getResFiles: Error copying layout files for PhoneGap project. " + err);
+    this.getWWWSources = function(_self) {
+        _self.mkdirs([_self.projectDir + "/assets", _self.projectDir + "/assets/www/"], 0755, function(err) {
+            if (err) {
+                console.log("getWWWSources: Error creating assets/www directory: " + err);
+            } else {
+                async.copytree(__dirname + "/Resources/phonegap/Sample/", _self.projectDir + "/assets/www/", function (err) {
+                    if (err) console.log("getWWWSources: Error populating www for PhoneGap project. " + err);
+                });
+            }   
         });
+    };
+    
+    this.mkdirs = function(dirs, mode, cb) {
+        (function next(e) {
+            (!e && dirs.length) ? fs.mkdir(dirs.shift(), mode, next) : cb(e);
+        })(null);
     };
     
     this.phonegapizeAndroidManifest = function(_self) {
         // First get reference file. TODO - add GitHub and installation references
         
-        fs.readFile(__dirname + "Resources/phonegap/AndroidManifest.xml", 'utf8', function(e, data) {
-            if (e) console.log("phonegapizeAndroidManifest: Error reading AndroidManifest.xml in: " + __dirname + ". Error: " + err);
+        fs.readFile(__dirname + "/Resources/phonegap/AndroidManifest.xml", 'utf8', function(err, data) {
+            if (err) console.log("phonegapizeAndroidManifest: Error reading AndroidManifest.xml in: " + __dirname + ". Error: " + err);
             var manifestInsert = _self.getManifestScreensAndPermissions(data);
             var minSdk = _self.getMinSdk(data);
          
             var newManifestFile = _self.projectDir + "/AndroidManifest.xml";
-            fs.readFile(newManifestFile, 'utf8', function(e, data) {
-                if (e) console.log("phonegapizeAndroidManifest: Error reading: " + newManifestFile + ". Error: " + err);
+            fs.readFile(newManifestFile, 'utf8', function(err, data) {
+                if (err) console.log("phonegapizeAndroidManifest: Error reading: " + newManifestFile + ". Error: " + err);
                 
                 // Add phonegap screens, permissions and turn on debuggable
                 data = data.replace("<application android:", manifestInsert + "<application" + " android:debuggable=\"true\" android:");
@@ -156,8 +170,8 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
     };
     
     this.getResFiles = function() {    
-        async.copyfile(__dirname + "Resources/phonegap/layout/", _self.projectDir + "/res/layout/", function (err) {
-            console.log("getResFiles: Error copying layout files for PhoneGap project. " + err);
+        async.copyfile(__dirname + "/Resources/phonegap/layout/main.xml", _self.projectDir + '/res/layout/main.xml', true, function (err) {
+            if (err) console.log("getResFiles: Error copying layout files to " + _self.projectDir + " for PhoneGap project. " + err);
         });
         
         fs.readdir(_self.projectDir + "/res", function (err, filenames) {
@@ -166,10 +180,12 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
                 return;
             }
             filenames.forEach(function (filename) {
-                if (filename.indexOf("drawable") === 0) {                    
-                    async.copyfile(__dirname + "Resources/phonegap/icons/mdspgicon.png", filename, function (err) {
-                        console.log("getResFiles: Error copying icon for PhoneGap project. " + filename + ". Error: " + err);
+                if (filename.indexOf("drawable") === 0) {     
+                    var fullname = _self.projectDir + '/res/' + filename + '/icon.png';
+                    async.copyfile(__dirname + "/Resources/phonegap/icons/mdspgicon.png", fullname, true, function (err) {
+                        if (err) console.log("getResFiles: Error copying icon for PhoneGap project: " + fullname + ": Error: " + err);
                     });
+               
                 }
             });
         });
