@@ -96,7 +96,13 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
     };
 
     this.getPhonegapJar = function() {
-        // TODO research classpath changes
+        // Get phonegap.jar and the classpath
+        async.copyfile(__dirname + "/Resources/phonegap/jar/phonegap.jar", _self.projectDir + '/libs/phonegap.jar', true, function (err) {
+            if (err) console.log("getPhonegapJar: Error copying phonegap.jar to " + _self.projectDir + " for PhoneGap project. " + err);
+        }); 
+        async.copyfile(__dirname + "/Resources/phonegap/jar/dot_classpath", _self.projectDir + '/.classpath', true, function (err) {
+            if (err) console.log("getPhonegapJar: Error copying .classpath to " + _self.projectDir + " for PhoneGap project. " + err);
+        }); 
     };
     
     this.getWWWSources = function(_self) {
@@ -104,6 +110,9 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
             if (err) {
                 console.log("getWWWSources: Error creating assets/www directory: " + err);
             } else {
+                async.copytree(__dirname + "/Resources/phonegap/js/", _self.projectDir + "/assets/www/", function (err) {
+                    if (err) console.log("getWWWSources: Error copying phonegap.js to " + _self.projectDir + " for PhoneGap project. " + err);
+                }); 
                 async.copytree(__dirname + "/Resources/phonegap/Sample/", _self.projectDir + "/assets/www/", function (err) {
                     if (err) console.log("getWWWSources: Error populating www for PhoneGap project. " + err);
                 });

@@ -26,9 +26,7 @@ var Buildrun = (function() {
            
             var data = {
                 command : "android_run",
-                cwd: ide.workspaceDir + '/' + name,
-                invoke: "ant",
-                args: ["debug"]
+                cwd: ide.workspaceDir + '/' + name
             };            
             
             ide.socket.send(JSON.stringify(data));        

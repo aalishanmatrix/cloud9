@@ -34,11 +34,11 @@ sys.inherits(AndroidRunPlugin, Plugin);
             if (e) {
                 fail = true;
             } else {
-                packageName = _self.getFromAndroidXml(data, 'package');
+                packageName = _self.getFromAndroidXml(data, 'manifest', 'package');
                 if (!packageName) { 
                     fail = true;
                 } else {
-                    activity = _self.getFromAndroidXml(data, 'activity android:name');
+                    activity = _self.getFromAndroidXml(data, 'activity', 'android:name');
                     if (!activity) {
                         fail = true;
                     }
@@ -56,17 +56,19 @@ sys.inherits(AndroidRunPlugin, Plugin);
         });
     };
     
-    this.getFromAndroidXml = function(contents, key) {
-         var index = contents.indexOf(key);
-         if (index === -1) return null;
-         index += key.length + 2;  // skip past key and ="
-         var endIndex = contents.indexOf('"', index);
-         if (endIndex === -1) return null;
-         return contents.substring(index, endIndex);
+    this.getFromAndroidXml = function(contents, key, attr) {
+        var index = contents.indexOf(key);
+        if (index === -1) return null;
+        index = contents.indexOf(attr, index);
+        if (index === -1) return null;
+        index += attr.length + 2;  // skip past key and ="
+        var endIndex = contents.indexOf('"', index);
+        if (endIndex === -1) return null;
+        return contents.substring(index, endIndex);
     };
          
     this.build = function(_self, message) {
-        this.spawnCommand(message.invoke, message.args, message.cwd, null, null, function(code, err, out) {
+        this.spawnCommand('ant', ["debug"], message.cwd, null, null, function(code, err, out) {
             var index = out.indexOf('BUILD SUCCESSFUL');
             if (index === -1) { 
                 /* Build failed, so send log back to console */
