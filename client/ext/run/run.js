@@ -97,7 +97,12 @@ return ext.register("ext/run/run", {
             .attr("name", name)
             .attr("args", "").node();
 
-        mdlRunConfigurations.appendXml(cfg);
+        var firstcfg = lstRunCfg.root.childNodes[0];
+        if (firstcfg) {
+            apf.b(firstcfg).before(cfg);
+        } else {
+            mdlRunConfigurations.appendXml(cfg);
+        }
         lstRunCfg.select(cfg);
         winRunCfgNew.show();
     },
