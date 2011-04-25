@@ -1,6 +1,6 @@
 ## Android Cloud9 Branch
 
-This branch will be used to implement an Android plug-in for Cloud9. Both Java and JavaScript (with PhoneGap) are in scope.
+This branch is implementing an Android plug-in for Cloud9. Currently there is a proof-of-concept implementation of an Android project creation wizard, an Android build/deploy/run wizard, and a PhoneGap project creation wizard.
 
 # Cloud9 IDE
 
