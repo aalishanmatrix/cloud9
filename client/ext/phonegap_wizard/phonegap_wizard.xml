@@ -24,7 +24,7 @@
                 <a:hbox>
                 <a:fieldset flex="1">
                     <a:radiobutton group="grpPWConfig" skin="classic" checked="true" value="builtin" label="Use Built-in PhoneGap - version 0.9.4" />
-                    <a:radiobutton group="grpPWConfig" skin="classic" checked="true" value="builtin" label="Enter PhoneGap GitHub location" />
+                    <a:radiobutton group="grpPWConfig" skin="classic" checked="false" value="github" label="Enter PhoneGap GitHub location" />
                     <a:radiobutton group="grpPWConfig" skin="classic" checked="false" value="choose" label="Enter path to PhoneGap zipfile" />
                 </a:fieldset>
                 </a:hbox>
@@ -37,24 +37,25 @@
             <a:hbox align="center">
                 <a:label width="95">Build Target</a:label>
                 <a:dropdown id="ddSFPatterns" flex2="1" autoselect="true" maxitems="10" width="213" height="21">
-                    <a:item value="all">All known filetypes</a:item>
-                    <a:item value="actionscript">Actionscript files</a:item>
-                    <a:item value="xml">XML files</a:item>
+                    <a:item value="all">Android 2.2</a:item>
+                    <a:item value="actionscript">Android 2.3</a:item>
+                    <a:item value="xml">Android 3.0</a:item>
                 </a:dropdown>
             </a:hbox>
             
                 <a:hbox align="center">
                     <a:label width="95">Application Name</a:label>
-                    <a:textbox id="txtPWAppName" value='foo' flex="1"/>
+                    <a:textbox id="txtPWAppName" value='app_{txtPWProjectName.value}' flex="1"/>
                 </a:hbox>
                 
                 <a:hbox align="center">
                     <a:label width="95">Package Name</a:label>
-                    <a:textbox id="txtPWPackageName" value="com.{grpPWConfig.value}" flex="1"/>
+                    <a:textbox id="txtPWPackageName" value="com.example.{txtPWProjectName.value}" flex="1"/>
                 </a:hbox>
                 <a:hbox align="center">
                     <a:label width="95">Create Activity</a:label>
-                    <a:textbox id="txtPWActivity" value="act{document.getElementById('inpPWPgFile').value}" flex="1"/>
+                    <a:textbox id="txtPWActivity" value="activity_{txtPWProjectName.value}" flex="1"/>
+  <!--                  <a:textbox id="txtPWActivity" value="activy{document.getElementById('inpPWPgFile').value}" flex="1"/>/-->
                 </a:hbox>             
 
         </a:vbox>
