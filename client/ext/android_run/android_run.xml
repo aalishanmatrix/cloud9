@@ -62,16 +62,6 @@
                   disabled="{!lstAndroidRunCfg.selected}"/>
             </a:hbox>
             <a:divider />
-            <a:hbox align="center" margin="5 10" padding="10">
-                <a:label width="130" textalign="right">JavaScript file</a:label>
-                <a:textbox id="txtAndroidRunCfgName" flex="1" value="[@path]" disabled="{!lstAndroidRunCfg.selected}"/>
-                <a:button icon="folder.png" disabled="true" tooltip="Browse ..."></a:button>
-            </a:hbox>
-            <a:hbox align="center" margin="5 10" padding="10">
-                <a:label width="130" textalign="right">Command line arguments</a:label>
-                <a:textbox id="txtAndroidRunCfgName" flex="1" value="[@args]" disabled="{!lstAndroidRunCfg.selected}"/>
-            </a:hbox>
-            <a:divider />
             <a:hbox padding="5" pack="end" edge="10 10 5 10">
                 <a:button 
                   default="2" 

@@ -90,17 +90,22 @@ return ext.register("ext/android_run/android_run", {
             name = "replace me with an Android project name";
         } else {
             path = file.getAttribute("path").slice(ide.davPrefix.length + 1);
-            name = file.getAttribute("name").replace(/\.js$/, "");
+            name = file.getAttribute("path").slice(ide.davPrefix.length + 1).split('/',1)[0];
         }
 
         var cfg = apf.n("<config />")
             .attr("path", path)
             .attr("name", name)
             .attr("args", "").node();
-
-        mdlAndroidRunConfigurations.appendXml(cfg);
-        lstAndroidRunCfg.select(cfg);
+            
+        var firstcfg = lstAndroidRunCfg.root.childNodes[0];
+        if (firstcfg) {
+            apf.b(firstcfg).before(cfg);
+        } else {
+            mdlAndroidRunConfigurations.appendXml(cfg);
+        }
         winAndroidRunCfgNew.show();
+        lstAndroidRunCfg.select(cfg);
     },
 
     showRunConfigs : function(debug) {
@@ -109,8 +114,8 @@ return ext.register("ext/android_run/android_run", {
     },
 
     run : function(debug) {
-        var config = lstRunCfg.selected;
-        mdlRunConfigurations.data.setAttribute("debug", debug ? "1": "0");
+        var config = lstAndroidRunCfg.selected;
+        mdlAndroidRunConfigurations.data.setAttribute("debug", debug ? "1": "0");
         if (!config) {
             this.addConfig();
         } else { 
