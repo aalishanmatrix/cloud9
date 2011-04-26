@@ -491,6 +491,9 @@ return ext.register("ext/console/console", {
                     this.logNodeStream(res.err);
                 if (res.code) // End of command
                     this.log("", "divider");
+                if (res.phonegapName) {
+                    editors.showFile('/workspace/' + res.phonegapName + '/assets/www/index.html');
+                }
                 break;
             case "mkdir":
                 res = message.body;

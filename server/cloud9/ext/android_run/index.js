@@ -74,7 +74,8 @@ sys.inherits(AndroidRunPlugin, Plugin);
                 /* Build failed, so send log back to console */
                 _self.sendResult(0, "android_build", {
                     err: err,
-                    out: out
+                    out: out,
+                    code: 1
                 });
             } else {
                 _self.deploy(_self, message.cwd, index, out);
@@ -91,7 +92,8 @@ sys.inherits(AndroidRunPlugin, Plugin);
                 /* Deploy failed */                    
                 _self.sendResult(0, "android_deploy", {
                     err: err,
-                    out: out
+                    out: out,
+                    code: 1
                 });
             } else {
                 _self.run(_self, cwd);
@@ -103,7 +105,8 @@ sys.inherits(AndroidRunPlugin, Plugin);
         _self.spawnCommand("adb", ["shell", "am", "start", "-n", _self.activityString], cwd, null, null, function(code, err, out) {                                      
             _self.sendResult(0, "android_run", {
                 err: err,
-                out: out
+                out: out,
+                code: 1
             });
         });
     };
