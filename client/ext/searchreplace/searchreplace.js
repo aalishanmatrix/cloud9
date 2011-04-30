@@ -66,6 +66,8 @@ return ext.register("ext/searchreplace/searchreplace", {
         //buttons
         this.btnReplace    = btnReplace;//winSearchReplace.selectSingleNode("a:vbox/a:hbox/a:button[1]");
         this.btnReplace.onclick = this.replace.bind(this);
+        this.btnReplaceFind    = btnReplaceFind;//winSearchReplace.selectSingleNode("a:vbox/a:hbox/a:button[1]");
+        this.btnReplaceFind.onclick = this.replaceFind.bind(this);
         this.btnReplaceAll = btnReplaceAll;//winSearchReplace.selectSingleNode("a:vbox/a:hbox/a:button[2]");
         this.btnReplaceAll.onclick = this.replaceAll.bind(this);
         this.btnFind       = btnFind;//winSearchReplace.selectSingleNode("a:vbox/a:hbox/a:button[3]");
@@ -82,14 +84,15 @@ return ext.register("ext/searchreplace/searchreplace", {
             this.setupDialog(isReplace);
 
             var editor = editors.currentEditor;
+            var value;
             if (editor.ceEditor)
-                var value = editor.ceEditor.getLastSearchOptions().needle;
+                value = editor.ceEditor.getLastSearchOptions().needle;
     
             if (!value) {
                 var sel   = editor.getSelection();
                 var doc   = editor.getDocument();
                 var range = sel.getRange();
-                var value = doc.getTextRange(range);
+                value = doc.getTextRange(range);
             }
             if (value)
                 this.txtFind.setValue(value);
@@ -120,9 +123,10 @@ return ext.register("ext/searchreplace/searchreplace", {
     setupDialog: function(isReplace) {
         this.$lastState = isReplace;
         
-        // hide all 'replace' features
+        // 'replace' features visible if replace command 
         this.barReplace.setProperty("visible", isReplace);
         this.btnReplace.setProperty("visible", isReplace);
+        this.btnReplaceFind.setProperty("visible", isReplace);
         this.btnReplaceAll.setProperty("visible", isReplace);
         return this;
     },
@@ -184,12 +188,21 @@ return ext.register("ext/searchreplace/searchreplace", {
             return;
         if (!this.barReplace.visible)
             return;
+        if (!this.$editor.$search.find(this.$editor.session)) {
+            // Ideally should disable the replace button, but at least this gets rid of console error
+            return;
+        }
         var options = this.getOptions();
         options.needle = this.txtFind.getValue()
         options.scope = search.Search.SELECTION;
         this.$editor.replace(this.txtReplace.getValue() || "", options);
         this.$editor.find(this.$crtSearch, options);
         ide.dispatchEvent("track_action", {type: "replace"});
+    },
+    
+    replaceFind: function() {
+        this.replace();
+        this.findNext();
     },
 
     replaceAll: function() {
