@@ -24,34 +24,37 @@
                 <a:radiobutton group="grpAWContents" skin="classic" checked="false" value="sample" label="Create From Sample" />
             </a:fieldset>
                     </a:hbox>
-
+                    
+                    
             <a:hbox align="center">
                 <a:label width="95">Build Target</a:label>
-                <a:dropdown id="ddSFPatterns" flex2="1" autoselect="true" maxitems="10" width="213" height="21">
-                    <a:item value="all">All known filetypes</a:item>
-                    <a:item value="actionscript">Actionscript files</a:item>
-                    <a:item value="xml">XML files</a:item>
+                <a:dropdown id="ddAWTarget" flex2="1" autoselect="true" maxitems="10" width="213" height="21">
+                    <a:item value="4">Android 2.2</a:item> <!-- values from android list targets -->
+                    <a:item value="5">Android 2.3</a:item>
+                    <a:item value="6">Android 3.0</a:item>
                 </a:dropdown>
             </a:hbox>
             
-                <a:hbox align="center">
-                    <a:label width="95">Application Name</a:label>
-                    <a:textbox id="txtAWAppName" flex="1"/>
-                </a:hbox>
+            <a:hbox align="center">
+                <a:label width="95">Application Name</a:label>
+                <a:textbox id="txtAWAppName" value='app_{txtAWProjectName.value}' flex="1"/>
+            </a:hbox>
                 
-                <a:hbox align="center">
-                    <a:label width="95">Package Name</a:label>
-                    <a:textbox id="txtAWPackageName" flex="1"/>
-                </a:hbox>
-                <a:hbox align="center">
-                    <a:label width="95">Create Activity</a:label>
-                    <a:textbox id="txtAWActivity" flex="1"/>
-                </a:hbox>
+            <a:hbox align="center">
+                <a:label width="95">Package Name</a:label>
+                <a:textbox id="txtAWPackageName" value="com.example.{txtAWProjectName.value}" flex="1"/>
+            </a:hbox>
+            
+            <a:hbox align="center">
+                <a:label width="95">Create Activity</a:label>
+                <a:textbox id="txtAWActivity" value="activity_{txtAWProjectName.value}" flex="1"/>
+  <!--                  <a:textbox id="txtPWActivity" value="activy{document.getElementById('inpPWPgFile').value}" flex="1"/>/-->
+            </a:hbox>        
                 
-                <a:hbox align="center">
-                    <a:label width="95">Min SDK Version</a:label>
-                    <a:textbox id="txtAWMinSDK" flex="1"/>
-                </a:hbox>                
+            <a:hbox align="center">
+                <a:label width="95">Min SDK Version</a:label>
+                <a:textbox id="txtAWMinSDK" flex="1"/>
+            </a:hbox>                
 
         </a:vbox>
         <a:divider />

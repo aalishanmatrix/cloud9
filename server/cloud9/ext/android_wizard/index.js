@@ -26,6 +26,9 @@ sys.inherits(AndroidWizardPlugin, Plugin);
          * android project creation example 
          * android create project --target 4 --name test1 --path ~/android-command-line/test1dir 
          * --activity myactivity --package com.mds.test1
+         * 
+         * See http://developer.android.com/guide/developing/projects/projects-cmdline.html for android create
+         * project spec
          */
             
         var cmd = "android";
@@ -34,7 +37,7 @@ sys.inherits(AndroidWizardPlugin, Plugin);
         args[0] = "create";
         args[1] = "project";
         args[2] = "--target";
-        args[3] = "4"; /*TODO GET Target from wizard */
+        args[3] = message.options.target;
         args[4] = "--name";
         args[5] = message.options.appName;
         args[6] = "--path";

@@ -95,6 +95,7 @@ return ext.register("ext/android_wizard/android_wizard", {
             appName : txtAWAppName.value,
             packageName : txtAWPackageName.value,
             activity : txtAWActivity.value,
+            target : ddAWTarget.value,
             minSDK : txtAWMinSDK.value
         };
     },

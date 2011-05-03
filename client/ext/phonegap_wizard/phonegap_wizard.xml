@@ -5,7 +5,7 @@
 	
     <a:window id="winPhonegapWizard"
       onhide="require('ext/phonegap_wizard/phonegap_wizard').onHide()"
-      title="Configure Phonegap Project"
+      title="Configure PhoneGap Project"
       buttons="close" 
       modal="false" 
       center="true" 
@@ -29,34 +29,35 @@
                 </a:fieldset>
                 </a:hbox>
                 <a:hbox  >
-                <input id="inpPWPgFile" type="file" visible="{grpPWConfig.value == 'choose'}" />
+                    <input id="inpPWPgFile" type="file" visible="{grpPWConfig.value == 'choose'}" />
                 </a:hbox>
             </a:vbox>
             </a:hbox>
 
             <a:hbox align="center">
                 <a:label width="95">Build Target</a:label>
-                <a:dropdown id="ddSFPatterns" flex2="1" autoselect="true" maxitems="10" width="213" height="21">
-                    <a:item value="all">Android 2.2</a:item>
-                    <a:item value="actionscript">Android 2.3</a:item>
-                    <a:item value="xml">Android 3.0</a:item>
+                <a:dropdown id="ddPWTarget" flex2="1" autoselect="true" maxitems="10" width="213" height="21">
+                    <a:item value="4">Android 2.2</a:item>
+                    <a:item value="5">Android 2.3</a:item>
+                    <a:item value="6">Android 3.0</a:item>
                 </a:dropdown>
             </a:hbox>
             
-                <a:hbox align="center">
-                    <a:label width="95">Application Name</a:label>
-                    <a:textbox id="txtPWAppName" value='app_{txtPWProjectName.value}' flex="1"/>
-                </a:hbox>
+            <a:hbox align="center">
+                <a:label width="95">Application Name</a:label>
+                <a:textbox id="txtPWAppName" value='app_{txtPWProjectName.value}' flex="1"/>
+            </a:hbox>
                 
-                <a:hbox align="center">
-                    <a:label width="95">Package Name</a:label>
-                    <a:textbox id="txtPWPackageName" value="com.example.{txtPWProjectName.value}" flex="1"/>
-                </a:hbox>
-                <a:hbox align="center">
-                    <a:label width="95">Create Activity</a:label>
-                    <a:textbox id="txtPWActivity" value="activity_{txtPWProjectName.value}" flex="1"/>
+            <a:hbox align="center">
+                <a:label width="95">Package Name</a:label>
+                <a:textbox id="txtPWPackageName" value="com.example.{txtPWProjectName.value}" flex="1"/>
+            </a:hbox>
+            
+            <a:hbox align="center">
+                <a:label width="95">Create Activity</a:label>
+                <a:textbox id="txtPWActivity" value="activity_{txtPWProjectName.value}" flex="1"/>
   <!--                  <a:textbox id="txtPWActivity" value="activy{document.getElementById('inpPWPgFile').value}" flex="1"/>/-->
-                </a:hbox>             
+            </a:hbox>             
 
         </a:vbox>
         <a:divider />
