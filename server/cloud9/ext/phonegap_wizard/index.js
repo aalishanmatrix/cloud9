@@ -26,6 +26,7 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
 
         this.projectDir = message.cwd + '/' + message.options.projectName;
         this.projectName = message.options.projectName;
+        this.useJqm = message.options.useJqm;
         var _self = this;
         var android_message = message;
         android_message.command = "android_wizard";
@@ -116,7 +117,10 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
     };
     
     this.getWWWSources = function(_self) {
-        _self.mkdirs([_self.projectDir + "/assets", _self.projectDir + "/assets/www/"], 0755, function(err) {
+        var jqm = _self.useJqm;
+        var newDirs = [_self.projectDir + "/assets", _self.projectDir + "/assets/www/"];
+        if (jqm) newDirs.push(_self.projectDir + "/assets/www/jquery.mobile");
+        _self.mkdirs(newDirs, 0755, function(err) {
             if (err) {
                 _self.log(_self, "getWWWSources: Error creating assets/www directory: " + err);
             } else {
@@ -127,13 +131,26 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
                         _self.register(_self); // #4 success
                     }
                 }); 
-                async.copytree(__dirname + "/Resources/phonegap/Sample/", _self.projectDir + "/assets/www/", function (err) {
+                var wwwSrc = __dirname + (jqm ? "/Resources/jqm/phonegapExample/" : "/Resources/phonegap/Sample/");
+                async.copytree(wwwSrc, _self.projectDir + "/assets/www/", function (err) {
                     if (err) {
                         _self.log(_self, "getWWWSources: Error populating www for PhoneGap project. " + err);
                     } else {
                         _self.register(_self); // #5 success
                     }
                 });
+                
+                if (jqm) {           
+                    async.copytree(__dirname + "/Resources/jqm/jquery.mobile", _self.projectDir + "/assets/www/jquery.mobile/", function (err) {
+                        if (err) {
+                            _self.log(_self, "getWWWSources: Error populating jquery.mobile for PhoneGap project. " + err);
+                        } else {
+                            _self.register(_self); // #6 success
+                        }
+                    });
+                } else {
+                      _self.register(_self); // #6 success (dummy to stay even with jqm case)
+                }
             }   
         });
     };
@@ -171,7 +188,7 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
                     if (err) {
                         _self.log(_self, "updateJavaMain: Error writing file: " + newManifestFile + ". Error: " + err);
                     } else {
-                        _self.register(_self); // #6 success
+                        _self.register(_self); // #7 success
                     }
                 });
             });
@@ -206,7 +223,7 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
             if (err) {
                 _self.log(_self, "getResFiles: Error copying layout files to " + _self.projectDir + " for PhoneGap project. " + err);
             } else {
-                _self.register(_self); // #7 success
+                _self.register(_self); // #8 success
             }
         });
         
@@ -226,7 +243,7 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
                         if (err) {
                             _self.log(_self, "getResFiles: Error copying icon for PhoneGap project: " + fullname + ": Error: " + err);
                         } else {
-                            if (++count === total)  _self.register(_self); // #8 success
+                            if (++count === total)  _self.register(_self); // #9 success
                         }
                     });
                 }
@@ -245,7 +262,7 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
     };
     
     this.register = function(_self) {
-        if (++_self.successCount === 8) {
+        if (++_self.successCount === 9) {
             _self.sendResult(0, "phonegap_wizard", {
                 out: "PhoneGap project " + _self.projectName + " successfully created",
                 phonegapName: _self.projectName,

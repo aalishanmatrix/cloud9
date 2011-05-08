@@ -95,6 +95,7 @@ return ext.register("ext/phonegap_wizard/phonegap_wizard", {
             appName : txtPWAppName.value,
             packageName : txtPWPackageName.value,
             activity : txtPWActivity.value,
+            useJqm : chkIncludeJqm.value,
             target : ddPWTarget.value
         };
     },

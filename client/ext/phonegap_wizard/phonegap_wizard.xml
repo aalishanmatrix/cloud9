@@ -33,7 +33,9 @@
                 </a:hbox>
             </a:vbox>
             </a:hbox>
-
+            
+            <a:checkbox id="chkIncludeJqm" label="Include jQuery Mobile" />
+            
             <a:hbox align="center">
                 <a:label width="95">Build Target</a:label>
                 <a:dropdown id="ddPWTarget" flex2="1" autoselect="true" maxitems="10" width="213" height="21">
