@@ -29,9 +29,10 @@
             <a:hbox align="center">
                 <a:label width="95">Build Target</a:label>
                 <a:dropdown id="ddAWTarget" flex2="1" autoselect="true" maxitems="10" width="213" height="21">
-                    <a:item value="4">Android 2.2</a:item> <!-- values from android list targets -->
-                    <a:item value="5">Android 2.3</a:item>
-                    <a:item value="6">Android 3.0</a:item>
+                    <a:item value="android-7">Android 2.1</a:item> <!-- values from android list targets -->
+                    <a:item value="android-8">Android 2.2</a:item> 
+                    <a:item value="android-9">Android 2.3</a:item>
+                    <a:item value="android-11">Android 3.0</a:item>
                 </a:dropdown>
             </a:hbox>
             

@@ -36,7 +36,7 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
     this.afterAndroid = function(code, err, out, _self) {
         _self.log(_self, "Got here" + code + 'err: ' + err + 'out: ' + out + 'cwd: ' + _self.projectDir);
         
-        _self.successCount = 0; // Needs to be incremented to 8 for a successful project creation
+        _self.successCount = 0; // Needs to be incremented to 9 for a successful project creation
         _self.errorLogged = false; // Just send first error back to client (all logged on console)
         _self.findJavaFile(_self, _self.projectDir);  // First, find and update the Java Main file
         _self.getPhonegapJar(_self);
