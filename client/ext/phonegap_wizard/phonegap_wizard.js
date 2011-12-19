@@ -10,21 +10,16 @@ define(function(require, exports, module) {
  
  var ide = require("core/ide");
  var ext = require("core/ext");
- var util = require("core/util");
- var canon = require("pilot/canon");
- var editors = require("ext/editors/editors");
  var console = require("ext/console/console");
- var skin = require("text!ext/phonegap_wizard/skin.xml");
  var markup = require("text!ext/phonegap_wizard/phonegap_wizard.xml");
   
-return ext.register("ext/phonegap_wizard/phonegap_wizard", {
+module.exports = ext.register("ext/phonegap_wizard/phonegap_wizard", {
     name     : "PhoneGap Wizard",
     dev      : "mobiledevelopersolutions.com",
     type     : ext.GENERAL,
     alone    : true,
     offline  : false,
     markup   : markup,
-    skin     : skin,
     commands  : {
         "phonegap_wizard": {hint: "configure a PhoneGap Project"}
     },
@@ -55,7 +50,6 @@ return ext.register("ext/phonegap_wizard/phonegap_wizard", {
         this.btnCreate = btnPWCreate;
         this.btnCreate.onclick = this.execCreate.bind(this);
 
-        var _self = this;
         winPhonegapWizard.onclose = function() {
             ceEditor.focus();
         };

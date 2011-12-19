@@ -10,21 +10,16 @@ define(function(require, exports, module) {
  
  var ide = require("core/ide");
  var ext = require("core/ext");
- var util = require("core/util");
- var canon = require("pilot/canon");
- var editors = require("ext/editors/editors");
  var console = require("ext/console/console");
- var skin = require("text!ext/android_wizard/skin.xml");
  var markup = require("text!ext/android_wizard/android_wizard.xml");
   
-return ext.register("ext/android_wizard/android_wizard", {
+module.exports = ext.register("ext/android_wizard/android_wizard", {
     name     : "Android Wizard",
     dev      : "mobiledevelopersolutions.com",
     type     : ext.GENERAL,
     alone    : true,
     offline  : false,
     markup   : markup,
-    skin     : skin,
     commands  : {
         "android_wizard": {hint: "configure an Android Project"}
     },
@@ -55,7 +50,6 @@ return ext.register("ext/android_wizard/android_wizard", {
         this.btnCreate = btnAWCreate;
         this.btnCreate.onclick = this.execCreate.bind(this);
 
-        var _self = this;
         winAndroidWizard.onclose = function() {
             ceEditor.focus();
         };

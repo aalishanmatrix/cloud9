@@ -1,14 +1,13 @@
 <a:application xmlns:a="http://ajax.org/2005/aml">
-	<a:skin id="android_wizard"
-  	src        = "{require('ext/android_wizard/android_wizard').skin}" 
-  	media-path = "/static/ext/android_wizard/images/" />
 	
     <a:window id="winAndroidWizard"
       onhide="require('ext/android_wizard/android_wizard').onHide()"
       title="Configure Android Project"
       buttons="close" 
+      skin    = "bk-window"
+      class   = "relative"
       modal="false" 
-      center="true" 
+      center="true"
       width="350" 
       kbclose="true">
         <a:vbox edge="10" padding="5">
@@ -24,8 +23,7 @@
                 <a:radiobutton group="grpAWContents" skin="classic" checked="false" value="sample" label="Create From Sample" />
             </a:fieldset>
                     </a:hbox>
-                    
-                    
+                       
             <a:hbox align="center">
                 <a:label width="95">Build Target</a:label>
                 <a:dropdown id="ddAWTarget" flex2="1" autoselect="true" maxitems="10" width="213" height="21">
@@ -35,7 +33,7 @@
                     <a:item value="android-11">Android 3.0</a:item>
                 </a:dropdown>
             </a:hbox>
-            
+          
             <a:hbox align="center">
                 <a:label width="95">Application Name</a:label>
                 <a:textbox id="txtAWAppName" value='app_{txtAWProjectName.value}' flex="1"/>

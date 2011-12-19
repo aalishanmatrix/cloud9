@@ -16,7 +16,7 @@ var save = require("ext/save/save");
 var markup = require("text!ext/android_run/android_run.xml");
 var buildrun = new Buildrun();
 
-return ext.register("ext/android_run/android_run", {
+module.exports = ext.register("ext/android_run/android_run", {
     name    : "Android Run Toolbar",
     dev     : "Ajax.org",
     type    : ext.GENERAL,
