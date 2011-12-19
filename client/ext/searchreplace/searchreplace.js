@@ -60,6 +60,8 @@ module.exports = ext.register("ext/searchreplace/searchreplace", {
     },
 
     init : function(amlNode){
+        var _self = this;
+        
         this.txtFind       = txtFind;//winSearchReplace.selectSingleNode("a:vbox/a:hbox[1]/a:textbox[1]");
         this.txtReplace    = txtReplace;//winSearchReplace.selectSingleNode("a:vbox/a:hbox[1]/a:textbox[1]");
         //bars
@@ -67,8 +69,6 @@ module.exports = ext.register("ext/searchreplace/searchreplace", {
         //buttons
         this.btnReplace    = btnReplace;//winSearchReplace.selectSingleNode("a:vbox/a:hbox/a:button[1]");
         this.btnReplace.onclick = this.replace.bind(this);
-        this.btnReplaceFind    = btnReplaceFind;//winSearchReplace.selectSingleNode("a:vbox/a:hbox/a:button[1]");
-        this.btnReplaceFind.onclick = this.replaceFind.bind(this);
         this.btnReplaceAll = btnReplaceAll;//winSearchReplace.selectSingleNode("a:vbox/a:hbox/a:button[2]");
         this.btnReplaceAll.onclick = this.replaceAll.bind(this);
         this.btnFind       = btnFind;//winSearchReplace.selectSingleNode("a:vbox/a:hbox/a:button[3]");
@@ -76,8 +76,61 @@ module.exports = ext.register("ext/searchreplace/searchreplace", {
         winSearchReplace.onclose = function() {
             ceEditor.focus();
         }
+        
+        this.txtFind.addEventListener("keydown", function(e){
+            switch (e.keyCode){
+//                case 13: //ENTER
+//                    _self.execSearch(false, !!e.shiftKey);
+//                    return false;
+//                case 27: //ESCAPE
+//                    _self.toggleDialog(-1);
+//                    if (e.htmlEvent)
+//                        apf.stopEvent(e.htmlEvent)
+//                    else if (e.stop)
+//                        e.stop();
+//                    return false;
+                case 38: //UP
+                    _self.navigateList("prev");
+                break;
+                case 40: //DOWN
+                    _self.navigateList("next");
+                break;
+                case 36: //HOME
+                    if (!e.ctrlKey) return;
+                    _self.navigateList("first");
+                break;
+                case 35: //END
+                    if (!e.ctrlKey) return;
+                    _self.navigateList("last");
+                break;
+            }
+        });
     },
+    
+    navigateList : function(type){
+        var settings = require("ext/settings/settings");
+        if (!settings) return;
+        
+        var model = settings.model;
+        var lines = model.queryNodes("search/word");
+        
+        var next;
+        if (type == "prev")
+            next = Math.max(0, this.position - 1);
+        else if (type == "next")
+            next = Math.min(lines.length - 1, this.position + 1);
+        else if (type == "last")
+            next = Math.max(lines.length - 1, 0);
+        else if (type == "first")
+            next = 0;
 
+        if (lines[next]) {
+            this.txtFind.setValue(lines[next].getAttribute("key"));
+            this.txtFind.select();
+            this.position = next;
+        }
+    },
+    
     toggleDialog: function(isReplace, forceShow) {
         ext.initExtension(this);
 
@@ -86,7 +139,6 @@ module.exports = ext.register("ext/searchreplace/searchreplace", {
 
             var value;
             var editor = editors.currentEditor;
-
             if (editor) {
                 if (editor.ceEditor)
                     value = editor.ceEditor.getLastSearchOptions().needle;
@@ -97,6 +149,7 @@ module.exports = ext.register("ext/searchreplace/searchreplace", {
                     var range = sel.getRange();
                     value = doc.getTextRange(range);
                 }
+                
                 if (value)
                     this.txtFind.setValue(value);
 
@@ -126,11 +179,11 @@ module.exports = ext.register("ext/searchreplace/searchreplace", {
 
     setupDialog: function(isReplace) {
         this.$lastState = isReplace;
-        
-        // 'replace' features visible if replace command 
+        this.position = 0;
+
+        // hide all 'replace' features
         this.barReplace.setProperty("visible", isReplace);
         this.btnReplace.setProperty("visible", isReplace);
-        this.btnReplaceFind.setProperty("visible", isReplace);
         this.btnReplaceAll.setProperty("visible", isReplace);
         return this;
     },
@@ -190,10 +243,6 @@ module.exports = ext.register("ext/searchreplace/searchreplace", {
             return;
         if (!this.barReplace.visible)
             return;
-        if (!this.$editor.$search.find(this.$editor.session)) {
-            // Ideally should disable the replace button, but at least this gets rid of console error
-            return;
-        }
         var options = this.getOptions();
         options.needle = this.txtFind.getValue();
         options.scope = search.Search.SELECTION;
@@ -201,11 +250,6 @@ module.exports = ext.register("ext/searchreplace/searchreplace", {
         //this.$editor.find(this.$crtSearch, options);
         this.findNext();
         ide.dispatchEvent("track_action", {type: "replace"});
-    },
-    
-    replaceFind: function() {
-        this.replace();
-        this.findNext();
     },
 
     replaceAll: function() {
