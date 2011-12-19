@@ -26,6 +26,36 @@
                 background: -webkit-gradient(linear,left bottom,left top,color-stop(0, rgb(232,232,232)),color-stop(1, rgb(227,227,227)));
                 background:-moz-linear-gradient(center bottom,rgb(232,232,232) 0%,rgb(227,227,227) 100%);
             }
+            
+            #divSearchCount {
+                position: absolute;
+                width: auto;
+                height: 19px;
+                right: 73px;
+                top: 2px;
+            }
+            
+            #divSearchCount .searchIter,
+            #divSearchCount .searchTotal {
+                color: #aaa;
+                font-size: 11px;
+                height: 19px;
+                line-height: 20px;
+                text-align: center;
+                vertical-align: middle;
+                display:inline;
+                float: left;
+            }
+            
+            #divSearchCount .searchIter {
+                margin: 0 1px 0 0;
+                padding: 0 0 0 7px;
+            }
+            
+            #divSearchCount .searchTotal {
+                margin: 0;
+                padding: 0 5px 0 2px;
+            }
         ]]></a:style>
 
         <a:presentation>
@@ -56,14 +86,14 @@
                 height: 20px;
                 display: block;
                 background-repeat:no-repeat;
-                background-position: 0 1px;
+                background-position: 2px 1px;
             }
 
             .btnsearchiconOver span {
-                background-position: 0 -20px;
+                background-position: 2px -20px;
             }
             .btnsearchiconDown span {
-                background-position: 0 -40px;
+                background-position: 2px -40px;
             }
         ]]></a:style>
         <a:presentation>
@@ -100,7 +130,7 @@
                 border: 1px solid #afafaf;
                 margin: 0;
                 outline: none;
-                font-family: Tahoma;
+                font-family: Tahoma, Arial;
                 font-size: 12px;
                 text-overflow: ellipsis;
                 -webkit-box-shadow: 0px 1px 0px #ffffff;

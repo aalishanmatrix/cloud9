@@ -17,27 +17,27 @@ define(function(require, exports, module) {
         };
 
         ide.start = function() {
-            var last = "";
-
             //Set references to global elements - aka extension points
             //this.tbMain       = tbMain;
-            this.mnuFile      = mnuFile;
-            this.mnuEdit      = mnuEdit;
+            this.mnuFile        = mnuFile;
+            this.mnuEdit        = mnuEdit;
             //this.barMenu      = barMenu;
-            this.barTools     = barTools;
-            this.sbMain       = sbMain;
-            this.vbMain       = vbMain;
+            this.barTools       = barTools;
+            this.sbMain         = sbMain;
+            this.vbMain         = vbMain;
 
-            this.workspaceDir = window.cloud9config.workspaceDir.replace(/\/+$/, "");
-            this.davPrefix = window.cloud9config.davPrefix.replace(/\/+$/, "");
-            this.sessionId = window.cloud9config.sessionId;
-            this.workspaceId = window.cloud9config.workspaceId;
-            this.readonly = window.cloud9config.readonly;
-            this.projectName = window.cloud9config.projectName;
+            this.workspaceDir   = window.cloud9config.workspaceDir.replace(/\/+$/, "");
+            this.davPrefix      = window.cloud9config.davPrefix.replace(/\/+$/, "");
+            this.staticPrefix   = window.cloud9config.staticUrl;
+            this.sessionId      = window.cloud9config.sessionId;
+            this.workspaceId    = window.cloud9config.workspaceId;
+            this.readonly       = window.cloud9config.readonly;
+            this.projectName    = window.cloud9config.projectName;
 
-            this.loggedIn = true;
+            this.loggedIn       = true;
 
-            this.onLine = false;
+            this.onLine         = false;
+            this.offlineFileSystemSupport = false;
 
             this.dispatchEvent("load");
 
@@ -106,10 +106,12 @@ define(function(require, exports, module) {
         ide.addEventListener("extload", function() {
             // fire up the socket connection:
             var options = {
-                rememberTransport: false,
-                transports:  ["htmlfile", "xhr-multipart", "flashsocket", "xhr-polling", "jsonp-polling"],
-                connectTimeout: 5000,
-                transportOptions: {
+                "remember transport": false,
+                transports:  ["websocket", "htmlfile", "xhr-multipart", "xhr-polling"],
+                reconnect: false,
+                "connect timeout": 5000,
+                "try multiple transports": true,
+                "transport options": {
                     "xhr-polling": {
                         timeout: 60000
                     },
@@ -118,15 +120,28 @@ define(function(require, exports, module) {
                     }
                 }
             };
-
+            
             ide.socketConnect = function() {
-                clearTimeout(ide.$retryTimer);
+                clearInterval(ide.$retryTimer);
 
                 ide.socket.send(JSON.stringify({
                     command: "attach",
                     sessionId: ide.sessionId,
                     workspaceId: ide.workspaceId
                 }));
+            };
+            
+            ide.socketReconnect = function() {
+                // on a reconnect of the socket.io connection, the server may have
+                // lost our session. Now we do an HTTP request to fetch the current
+                // session ID and update the Cloud9 config with it. Also, re-attach
+                // with the backend.
+                apf.ajax("/reconnect", {
+                    callback: function(data, state, extra) {
+                        ide.sessionId = data;
+                        ide.socketConnect();
+                    }
+                });
             };
 
             ide.socketDisconnect = function() {
@@ -136,37 +151,34 @@ define(function(require, exports, module) {
                 ide.$retryTimer = setInterval(function() {
                     if (++retries == 3)
                         ide.dispatchEvent("socketDisconnect");
-                    
-                    if (!ide.socket.connecting && !ide.testOffline && ide.loggedIn)
-                        ide.socket.connect();
-                }, 500);
+
+                    var sock = ide.socket.socket;
+                    if (!sock.connecting && !sock.reconnecting && !ide.testOffline && ide.loggedIn)
+                        sock.reconnect();
+                }, 1000);
             };
 
             ide.socketMessage = function(message) {
                 try {
                     message = JSON.parse(message);
-                } catch(e) {
+                }
+                catch(e) {
                     return;
                 }
 
                 if (message.type == "attached")
-                    ide.dispatchEvent("socketConnect");
+                    ide.dispatchEvent("socketConnect"); //This is called too often!!
 
                 ide.dispatchEvent("socketMessage", {
                     message: message
                 });
             };
             
-            //@todo see if this can be moved to noderunner
-            ide.addEventListener("socketMessage", function(e){
-                if (e.message.type && e.message.type == "state")
-                    stProcessRunning.setProperty("active", e.message.processRunning);
-            });
-
             // for unknown reasons io is sometimes undefined
             try {
-                ide.socket = new io.Socket(null, options);
-            } catch (e) {
+                ide.socket = io.connect(null, options);
+            }
+            catch (e) {
                 util.alert(
                     "Error starting up",
                     "Error starting up the IDE", "There was an error starting up the IDE.<br>Please clear your browser cache and reload the page.",
@@ -175,15 +187,19 @@ define(function(require, exports, module) {
                     }
                 );
                 
-                var socketIoScriptEl = Array.prototype.slice.call(document.getElementsByTagName("script"))
-                    .filter(function(script) {
+                var socketIoScriptEl = Array.prototype.slice.call(
+                    document.getElementsByTagName("script")).filter(function(script) {
                         return script.src && script.src.indexOf("socket.io.js") >= 0;
-                    })[0];
+                    }
+                )[0];
                 
+                var status;
                 if (socketIoScriptEl) {
                     apf.ajax(socketIoScriptEl.src, {
                         callback: function(data, state, extra) {
-                            try{var status = parseInt(extra.http.status);}catch(ex){}
+                            try {
+                                status = parseInt(extra.http.status, 10);
+                            } catch(ex) {}
                             apf.dispatchEvent("error", {
                                 message: "socket.io client lib not loaded",
                                 error: {
@@ -206,12 +222,38 @@ define(function(require, exports, module) {
             
             ide.socket.on("message",    ide.socketMessage);
             ide.socket.on("connect",    ide.socketConnect);
+            ide.socket.on("reconnect",  ide.socketReconnect);
+            //ide.socket.on("reconnecting",  ide.socketReconnecting);
             ide.socket.on("disconnect", ide.socketDisconnect);
-            ide.socket.connect();
+            var _oldsend = ide.socket.send;
+            ide.socket.send = function(msg) {
+                // pass a lambda to enable socket.io ACK
+                _oldsend.call(ide.socket, msg, function() {});
+            };
         });
         
+        ide.$msgQueue = [];
+        ide.addEventListener("socketConnect", function() {
+            while(ide.$msgQueue.length) {
+                var q = ide.$msgQueue;
+                ide.$msgQueue = [];
+                q.forEach(function(msg) {
+                    ide.socket.send(msg);
+                });
+            }
+        });
+        
+        ide.send = function(msg) {
+            if (!ide.socket || !ide.socket.socket.connected) {
+                ide.$msgQueue.push(msg);
+                return;
+            }
+            
+            ide.socket.send(msg);
+        };
+        
         ide.getActivePageModel = function() {
-            page = tabEditors.getPage();
+            var page = tabEditors.getPage();
             if (!page)
                 return null;
     
@@ -223,7 +265,6 @@ define(function(require, exports, module) {
                 return page.$model.data;
             });
         };
-
-        return ide;
+        module.exports = ide;
     }
 );

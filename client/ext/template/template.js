@@ -4,23 +4,22 @@
  * @copyright 2010, Ajax.org B.V.
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
-require.def("ext/template/template",
-    ["core/ide", 
-     "core/ext", 
-     "core/util", 
-     "ext/editors/editors", 
-     "text!ext/template/template.xml"],
-    function(ide, ext, util, editors, markup) {
-        
-return ext.register("ext/template/template", {
+
+define(function(require, exports, module) {
+
+var ide = require("core/ide");
+var ext = require("core/ext");
+var markup = require("text!ext/template/template.xml");
+
+module.exports = ext.register("ext/template/template", {
     name   : "Template",
     dev    : "Ajax.org",
     alone  : true,
     type   : ext.GENERAL,
     markup : markup,
-    
+
     nodes : [],
-    
+
     hook : function(){
         var _self = this;
         this.nodes.push(
@@ -33,23 +32,23 @@ return ext.register("ext/template/template", {
             }))
         );
     },
-    
+
     init : function(amlNode){
         this.winTemplate = winTemplate;
     },
-    
+
     enable : function(){
         this.nodes.each(function(item){
             item.enable();
         });
     },
-    
+
     disable : function(){
         this.nodes.each(function(item){
             item.disable();
         });
     },
-    
+
     destroy : function(){
         this.nodes.each(function(item){
             item.destroy(true, true);
@@ -59,5 +58,4 @@ return ext.register("ext/template/template", {
     }
 });
 
-    }
-);
+});

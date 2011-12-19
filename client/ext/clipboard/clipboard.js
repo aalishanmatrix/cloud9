@@ -4,20 +4,18 @@
  * @copyright 2010, Ajax.org B.V.
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
-require.def("ext/clipboard/clipboard",
-    ["core/ide", "core/ext"],
-    function(ide, ext) {
 
-return ext.register("ext/clipboard/clipboard", {
+define(function(require, exports, module) {
+
+"use strict";
+
+var ext = require("core/ext");
+
+module.exports = ext.register("ext/clipboard/clipboard", {
     dev    : "Ajax.org",
     name   : "Clipboard",
     alone  : true,
     type   : ext.GENERAL,
-    /*commands: {
-        "cut": {hint: "cut the selected text to the clipboard"},
-        "copy": {hint: "copy the selected text to the clipboard"},
-        "paste": {hint: "paste text from the clipboard into the active document"}
-    },*/
 
     nodes : [],
 
@@ -80,5 +78,4 @@ return ext.register("ext/clipboard/clipboard", {
     }
 });
 
-    }
-);
+});

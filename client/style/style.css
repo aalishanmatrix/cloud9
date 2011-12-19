@@ -4,7 +4,7 @@ HTML {
 }
 BODY {
     background-color : #fefefe;
-    font-family      : "Trebuchet MS";
+    font-family      : "Arial";
     color            : #222222;
     margin           : 0;
     padding          : 0 ;
@@ -38,7 +38,7 @@ BODY {
 .alertMsg {
     font-size   : 14px;
     color       : #333333;
-    font-family : Trebuchet MS;
+    font-family : Arial;
     line-height : 16px;
 }
 
@@ -54,8 +54,53 @@ BODY {
     color : #666;
 }
 
-.relative{
-    position : relative;
+.draganddrop {
+    position: absolute;
+    z-index: 99999;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    visibility: hidden;
+    background-color: rgba(255, 255, 255, 0);
+    color: #000;
+    text-align: center;
+    -webkit-transition: background-color 0.25s ease-out;
+    -moz-transition: background-color 0.25s ease-out;
+    -ms-transition: background-color 0.25s ease-out;
+    -o-transition: background-color 0.25s ease-out;
+    transition: background-color 0.25s ease-out;
+}
+
+.draganddrop.over {
+    visibility: visible;
+    background-color: rgba(255, 255, 255, .5);
+}
+
+.draganddrop > span {
+    padding: 16px 8px;
+    background-color: rgba(0, 0, 0, 0);
+    color: #fff;
+    font-size: 15px;
+    font-weight: bold;
+    position: relative;
+    top: 150px;
+    -webkit-transition: background-color 0.25s ease-out;
+    -moz-transition: background-color 0.25s ease-out;
+    -ms-transition: background-color 0.25s ease-out;
+    -o-transition: background-color 0.25s ease-out;
+    transition: background-color 0.25s ease-out;
+    border-radius: 8px;
+    -moz-border-radius: 8px;
+    -webkit-border-radius: 8px;
+}
+
+.draganddrop.over > span {
+    background-color: rgba(0, 0, 0, .75);
+}
+
+.relative {
+    position: relative;
 }
 
 .consoleInputBox {
@@ -82,4 +127,98 @@ BODY {
     -webkit-user-select: none;
     -o-user-select: none;
     user-select: none;
+}
+
+.ace_content { z-index: 0 }
+/**
+ * SERVICE SIGNIN BUTTONS
+ */
+ 
+.signin_options {
+    margin: 15px 16px 0;
+    text-align: right;
+}
+
+.github-signin {
+    width: 26px;
+    height: 24px;
+    background:url(images/signin_github.png) no-repeat 0 0;
+
+    display: inline-block;
+    float: right;
+    height: 24px;
+    margin-left: 6px;
+    margin-top: -5px;
+    width: 26px;
+}
+
+.github-signin.btn-over {
+    background-position:0 -24px;
+}
+
+.bitbucket-signin {
+    width: 26px;
+    height: 24px;
+    background:url(images/signin_bitbucket.png) no-repeat 0 0;
+
+    display: inline-block;
+    float: right;
+    height: 24px;
+    margin-left: 6px;
+    margin-top: -5px;
+    width: 26px;
+}
+
+.bitbucket-signin.btn-over {
+    background-position:0 -24px;
+}
+.facebook-signin {
+    width: 26px;
+    height: 24px;
+    background:url(images/signin_facebook.png) no-repeat 0 0;
+    
+    display: inline-block;
+    float: right;
+    height: 24px;
+    margin-left: 6px;
+    margin-top: -5px;
+    width: 26px;
+}
+
+.facebook-signin.btn-over {
+    background-position:0 -24px;
+}
+
+.google-signin {
+    width: 26px;
+    height: 24px;
+    background:url(images/signin_google.png) no-repeat 0 0;
+    
+    display: inline-block;
+    float: right;
+    height: 24px;
+    margin-left: 6px;
+    margin-top: -5px;
+    width: 26px;
+}
+
+.google-signin.btn-over {
+    background-position:0 -24px;
+}
+
+.twitter-signin {
+    width: 26px;
+    height: 24px;
+    background:url(images/signin_twitter.png) no-repeat 0 0;
+    
+    display: inline-block;
+    float: right;
+    height: 24px;
+    margin-left: 6px;
+    margin-top: -5px;
+    width: 26px;
+}
+
+.twitter-signin.btn-over {
+    background-position:0 -24px;
 }

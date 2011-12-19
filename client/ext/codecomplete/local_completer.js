@@ -1,0 +1,82 @@
+define(function(require, exports, module) {
+
+var baseLanguageHandler = require('ext/language/base_handler');
+var completeUtil = require("ext/codecomplete/complete_util");
+
+var SPLIT_REGEX = /[^a-zA-Z_0-9\$]+/;
+
+var completer = module.exports = Object.create(baseLanguageHandler);
+    
+completer.handlesLanguage = function(language) {
+    return true;
+};
+
+// For the current document, gives scores to identifiers not on frequency, but on distance from the current prefix
+function wordDistanceAnalyzer(doc, pos, prefix) {
+    var text = doc.getValue().trim();
+    
+    // Determine cursor's word index
+    var textBefore = doc.getLines(0, pos.row-1).join("\n") + "\n";
+    var currentLine = doc.getLine(pos.row);
+    textBefore += currentLine.substr(0, pos.column);
+    var prefixPosition = textBefore.trim().split(SPLIT_REGEX).length;
+    
+    // Split entire document into words
+    var identifiers = text.split(SPLIT_REGEX);
+    var identDict = {};
+    
+    // Find prefix to find other identifiers close it
+    for (var i = 0; i < identifiers.length; i++) {
+        var ident = identifiers[i];
+        var distance = Math.max(prefixPosition, i) - Math.min(prefixPosition, i);
+        // Score substracted from 100000 to force descending ordering
+        if (Object.prototype.hasOwnProperty.call(identDict, ident))
+            identDict[ident] = Math.max(1000000-distance, identDict[ident]);
+        else
+            identDict[ident] = 1000000-distance;
+        
+    }
+    return identDict;
+}
+
+function analyze(doc, pos) {
+    var line = doc.getLine(pos.row);
+    var identifier = completeUtil.retrievePreceedingIdentifier(line, pos.column);
+    
+    var analysisCache = wordDistanceAnalyzer(doc, pos, identifier);
+    // Remove the word to be completed
+    delete analysisCache[identifier];
+    return analysisCache;
+}
+
+/**
+ * Returns whether the completion engine requires an AST representation of the code
+ */
+completer.completionRequiresParsing = function() {
+    return false;
+};
+    
+completer.complete = function(doc, fullAst, pos, currentNode) {
+    var identDict = analyze(doc, pos);
+    var line = doc.getLine(pos.row);
+    var identifier = completeUtil.retrievePreceedingIdentifier(line, pos.column);
+    
+    var allIdentifiers = [];
+    for (var ident in identDict) {
+        allIdentifiers.push(ident);
+    }
+    var matches = completeUtil.findCompletions(identifier, allIdentifiers);
+
+    return matches.map(function(m) {
+        return {
+          name        : m,
+          replaceText : m,
+          icon        : null,
+          score       : identDict[m],
+          meta        : "",
+          priority    : 1
+        };
+    });
+};
+
+});

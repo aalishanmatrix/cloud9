@@ -4,24 +4,22 @@
  * @copyright 2010, Ajax.org B.V.
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
- 
+
 define(function(require, exports, module) {
 
-var ide = require("core/ide");
 var ext = require("core/ext");
-var canon = require("pilot/canon");
+var code = require("ext/code/code");
 var editors = require("ext/editors/editors");
 var skin = require("text!ext/gotoline/skin.xml");
 var markup = require("text!ext/gotoline/gotoline.xml");
 
-return ext.register("ext/gotoline/gotoline", {
+module.exports = ext.register("ext/gotoline/gotoline", {
     name    : "Gotoline Window",
     dev     : "Ajax.org",
     type    : ext.GENERAL,
     alone   : true,
     skin    : skin,
     markup  : markup,
-    
     commands : {
         "gotoline": {hint: "enter a linenumber and jump to it in the active document"}
     },
@@ -41,31 +39,33 @@ return ext.register("ext/gotoline/gotoline", {
             }))
         );
 
-        this.hotitems["gotoline"] = [this.nodes[1]];
-
-        canon.addCommand({
+        code.commandManager.addCommand({
             name: "gotoline",
-            exec: function(env, args, request) { 
+            exec: function(editor) {
                 _self.gotoline(1);
             }
         });
+
+        this.hotitems.gotoline = [this.nodes[1]];
     },
 
-    init : function(amlNode){
+    init : function(amlNode) {
         var _self = this;
+
         lstLineNumber.addEventListener("afterchoose", function() {
             if (lstLineNumber.selected) {
-                _self.execGotoLine(parseInt(lstLineNumber.selected.getAttribute("nr")));
+                _self.execGotoLine(parseInt(lstLineNumber.selected.getAttribute("nr"), 10));
             }
-            else
+            else {
                 _self.execGotoLine();
+            }
         });
         lstLineNumber.addEventListener("afterselect", function() {
             if (this.selected)
                 txtLineNr.setValue(this.selected.getAttribute("nr"));
         });
 
-        var restricted = [38, 40, 36, 35]
+        var restricted = [38, 40, 36, 35];
         lstLineNumber.addEventListener("keydown", function(e) {
             if (e.keyCode == 13 && this.selected){
                 return false;
@@ -103,7 +103,7 @@ return ext.register("ext/gotoline/gotoline", {
             else if ((e.keyCode > 57 || e.keyCode == 32) && (e.keyCode < 96 || e.keyCode > 105))
                 return false;
         });
-        
+
         winGotoLine.addEventListener("blur", function(e){
             if (!apf.isChildOf(winGotoLine, e.toElement))
                 _self.gotoline(-1);
@@ -112,7 +112,7 @@ return ext.register("ext/gotoline/gotoline", {
 
     gotoline: function(force) {
         ext.initExtension(this);
-        
+
         if (this.control && this.control.stop)
             this.control.stop();
 
@@ -127,22 +127,22 @@ return ext.register("ext/gotoline/gotoline", {
             var ace = editor.ceEditor.$editor;
             var aceHtml = editor.ceEditor.$ext;
             var cursor = ace.getCursorPosition();
-            
+
             //Set the current line
-            txtLineNr.setValue(cursor.row + 1);
-                
+            txtLineNr.setValue(txtLineNr.getValue() || cursor.row + 1);
+
             //Determine the position of the window
             var pos = ace.renderer.textToScreenCoordinates(cursor.row, cursor.column);
             var epos = apf.getAbsolutePosition(aceHtml);
             var maxTop = aceHtml.offsetHeight - 100;
-            
+
             editor.ceEditor.parentNode.appendChild(winGotoLine);
             winGotoLine.setAttribute("top", Math.min(maxTop, pos.pageY - epos[1]));
             winGotoLine.setAttribute("left", -60);
-            
+
             winGotoLine.show();
             txtLineNr.focus();
-            
+
             //Animate
             apf.tween.single(winGotoLine, {
                 type     : "left",
@@ -178,24 +178,24 @@ return ext.register("ext/gotoline/gotoline", {
         var editor = require('ext/editors/editors').currentEditor;
         if (!editor || !editor.ceEditor)
             return;
-        
+
         var ceEditor = editor.ceEditor;
         var ace      = ceEditor.$editor;
 
         winGotoLine.hide();
 
         if (typeof line != "number")
-            line = parseInt(txtLineNr.getValue()) || 0;
+            line = parseInt(txtLineNr.getValue(), 10) || 0;
 
         var history = lstLineNumber.$model;
         var gotoline, lineEl = history.queryNode("gotoline/line[@nr='" + line + "']");
         if (lineEl)
             gotoline = lineEl.parentNode;
         else {
-            gotoline = apf.createNodeFromXpath(history.data, "gotoline") 
+            gotoline = apf.createNodeFromXpath(history.data, "gotoline");
             lineEl   = apf.getXml("<line nr='" + line + "' />");
         }
-        
+
         if (lineEl != gotoline.firstChild)
             apf.xmldb.appendChild(gotoline, lineEl, gotoline.firstChild);
 

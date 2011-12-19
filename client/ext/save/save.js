@@ -4,22 +4,30 @@
  * @copyright 2010, Ajax.org B.V.
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
-require.def("ext/save/save",
-    ["core/ide", "core/ext", "core/util", "ext/filesystem/filesystem",
-     "text!ext/save/save.xml"],
-    function(ide, ext, util, fs, markup) {
 
-return ext.register("ext/save/save", {
+define(function(require, exports, module) {
+
+var ide = require("core/ide");
+var ext = require("core/ext");
+var util = require("core/util");
+var fs = require("ext/filesystem/filesystem");
+var css = require("text!ext/save/save.css");
+var markup = require("text!ext/save/save.xml");
+
+module.exports = ext.register("ext/save/save", {
     dev         : "Ajax.org",
     name        : "Save",
     alone       : true,
     type        : ext.GENERAL,
     markup      : markup,
+    css         : css,
     deps        : [fs],
-    offline     : false,
+    offline     : true,
+
     commands     : {
         "quicksave": {hint: "save the currently active file to disk"},
-        "saveas": {hint: "save the file to disk with a different filename"}
+        "saveas": {hint: "save the file to disk with a different filename"},
+        "reverttosaved": {hint: "downgrade the currently active file to the last saved version"}
     },
     hotitems    : {},
     nodes       : [],
@@ -27,32 +35,44 @@ return ext.register("ext/save/save", {
 
     hook : function(){
         if (!self.tabEditors) return;
-        
+
         var _self = this;
-        
+
         tabEditors.addEventListener("close", this.$close = function(e) {
             var at = e.page.$at;
             if (!at.undo_ptr)
                 at.undo_ptr = at.$undostack[0];
-            if (at.undo_ptr && at.$undostack[at.$undostack.length-1] !== at.undo_ptr) {
+            var node = e.page.$doc.getNode();
+            if (node && at.undo_ptr && at.$undostack[at.$undostack.length-1] !== at.undo_ptr
+              || !at.undo_ptr && node.getAttribute("changed") == 1
+              && e.page.$doc.getValue()) {
                 ext.initExtension(_self);
-                
+
                 winCloseConfirm.page = e.page;
-                winCloseConfirm.all = 0;
+                winCloseConfirm.all  = -100;
                 winCloseConfirm.show();
-                
+
                 winCloseConfirm.addEventListener("hide", function(){
                     if (winCloseConfirm.all != -100) {
-                        tabEditors.remove(winCloseConfirm.page, true);
-                        winCloseConfirm.page.$at.undo(-1);
-                        delete winCloseConfirm.page;
+                        var f = function(resetUndo){
+                            tabEditors.remove(winCloseConfirm.page, true);
+                            if (resetUndo)
+                                winCloseConfirm.page.$at.undo(-1);
+                            delete winCloseConfirm.page;
+                        };
+
+                        if (winCloseConfirm.all == -200)
+                            _self.quicksave(winCloseConfirm.page, f);
+                        else
+                            f(true);
+                        /*winSaveAs.page = winCloseConfirm.page;*/
                     }
                     winCloseConfirm.removeEventListener("hide", arguments.callee);
                 });
-                
+
                 btnYesAll.hide();
                 btnNoAll.hide();
-                
+
                 e.preventDefault();
             }
         });
@@ -69,7 +89,7 @@ return ext.register("ext/save/save", {
         var saveItem, saveAsItem;
         this.nodes.push(
             ide.mnuFile.insertBefore(new apf.divider(), ide.mnuFile.firstChild),
-        
+
             ide.mnuFile.insertBefore(new apf.item({
                 caption : "Save All",
                 onclick : function(){
@@ -77,7 +97,7 @@ return ext.register("ext/save/save", {
                 },
                 disabled : "{!!!tabEditors.activepage}"
             }), ide.mnuFile.firstChild),
-                
+
             saveAsItem = ide.mnuFile.insertBefore(new apf.item({
                 caption : "Save As...",
                 onclick : function () {
@@ -85,20 +105,32 @@ return ext.register("ext/save/save", {
                 },
                 disabled : "{!!!tabEditors.activepage}"
             }), ide.mnuFile.firstChild),
-            
+
             saveItem = ide.mnuFile.insertBefore(new apf.item({
                 caption : "Save",
                 onclick : this.quicksave.bind(this),
                 disabled : "{!!!tabEditors.activepage}"
+            }), ide.mnuFile.firstChild),
+
+            ide.mnuFile.insertBefore(new apf.divider(), ide.mnuFile.firstChild),
+
+            ide.mnuFile.insertBefore(new apf.item({
+                caption : "Revert to Saved",
+                onclick : function(){
+                    _self.reverttosaved();
+                },
+                disabled : "{!!!tabEditors.activepage}"
             }), ide.mnuFile.firstChild)
         );
 
-        this.hotitems["quicksave"] = [saveItem];
-        this.hotitems["saveas"]    = [saveAsItem];
+        this.hotitems.quicksave = [saveItem];
+        this.hotitems.saveas = [saveAsItem];
     },
 
     init : function(amlNode){
         var _self = this;
+
+        apf.importCssString((this.css || ""));
         winCloseConfirm.onafterrender = function(){
             btnYesAll.addEventListener("click", function(){
                 winCloseConfirm.all = 1;
@@ -109,33 +141,46 @@ return ext.register("ext/save/save", {
                 winCloseConfirm.hide();
             });
             btnSaveYes.addEventListener("click", function(){
-                _self.quicksave(winCloseConfirm.page);
-                winCloseConfirm.hide()
+                winCloseConfirm.all = -200;
+                winCloseConfirm.hide();
             });
             btnSaveNo.addEventListener("click", function(){
+                winCloseConfirm.all = 0;
                 winCloseConfirm.hide();
             });
             btnSaveCancel.addEventListener("click", function(){
                 winCloseConfirm.all = -100;
                 winCloseConfirm.hide();
             });
-        }
+        };
+
+        winSaveAs.addEventListener("hide", function(){
+            if (winSaveAs.page) {
+                tabEditors.remove(winSaveAs.page, true);
+                winSaveAs.page.$at.undo(-1);
+                delete winSaveAs.page;
+            }
+        });
     },
-    
+
+    reverttosaved : function(){
+        ide.dispatchEvent("reload", {doc : tabEditors.getPage().$doc});
+    },
+
     saveall : function(){
-        var pages = tabEditors.getPages();        
+        var pages = tabEditors.getPages();
         for (var i = 0; i < pages.length; i++) {
             var at = pages[i].$at;
             // if (at.undo_ptr && at.$undostack[at.$undostack.length-1] !== at.undo_ptr)
             this.quicksave(pages[i]);
         }
     },
-    
+
     saveAllInteractive : function(pages, callback){
         ext.initExtension(this);
-        
+
         winCloseConfirm.all = 0;
-                
+
         var _self = this;
         apf.asyncForEach(pages, function(item, next) {
             var at = item.$at;
@@ -147,7 +192,7 @@ return ext.register("ext/save/save", {
 
                 if (winCloseConfirm.all)
                     return next();
-                
+
                 tabEditors.set(item);
                 winCloseConfirm.page = item;
                 winCloseConfirm.show();
@@ -160,7 +205,7 @@ return ext.register("ext/save/save", {
                     winCloseConfirm.removeEventListener("hide", arguments.callee);
                     next();
                 });
-                
+
                 btnYesAll.setProperty("visible", pages.length > 1);
                 btnNoAll.setProperty("visible", pages.length > 1);
             }
@@ -172,7 +217,7 @@ return ext.register("ext/save/save", {
         });
     },
 
-    quicksave : function(page) {
+    quicksave : function(page, callback) {
         if (!page || !page.$at)
             page = tabEditors.getPage();
 
@@ -181,24 +226,41 @@ return ext.register("ext/save/save", {
 
         var doc  = page.$doc;
         var node = doc.getNode();
+
+        if (node.getAttribute("newfile")){
+            this.saveas(page, callback);
+            return;
+        }
+
         if (node.getAttribute("debug"))
             return;
 
         var path = node.getAttribute("path");
-        var value = doc.getValue();
-        
+
+        if (callback) {
+            ide.addEventListener("afterfilesave", function(e){
+                if (e.node == node) {
+                    callback();
+                    this.removeEventListener("afterfilesave", arguments.callee);
+                }
+            });
+        }
+
         // check if we're already saving!
-        var saving = parseInt(node.getAttribute("saving"));
+        var saving = parseInt(node.getAttribute("saving"), 10);
         if (saving) {
             this.saveBuffer[path] = page;
             return;
         }
-        apf.b(node).attr("saving", "1");
-        
+        apf.xmldb.setAttribute(node, "saving", "1");
+
         var _self = this, panel = sbMain.firstChild;
         panel.setAttribute("caption", "Saving file " + path);
-        
-        ide.dispatchEvent("beforefilesave", {node: node, doc: doc, value: value});
+
+        ide.dispatchEvent("beforefilesave", {node: node, doc: doc });
+
+        var value = doc.getValue();
+
         fs.saveFile(path, value, function(data, state, extra){
             if (state != apf.SUCCESS) {
                 util.alert(
@@ -209,126 +271,207 @@ return ext.register("ext/save/save", {
                             ? "The connection timed out."
                             : "The error reported was " + extra.message));
             }
-            
+
             panel.setAttribute("caption", "Saved file " + path);
             ide.dispatchEvent("afterfilesave", {node: node, doc: doc, value: value});
-            apf.b(node).attr("saving", "0");
+            ide.dispatchEvent("track_action", {
+                type: "save as filetype", 
+                fileType: node.getAttribute("name").split(".").pop(), 
+                success: state != apf.SUCCESS ? "false" : "true"
+            });
+
+            apf.xmldb.removeAttribute(node, "saving");
+            apf.xmldb.removeAttribute(node, "new");
+            apf.xmldb.setAttribute(node, "modifieddate", apf.queryValue(extra.data, "//d:getlastmodified"));
+
             if (_self.saveBuffer[path]) {
                 delete _self.saveBuffer[path];
                 _self.quicksave(page);
             }
-
-            //setTimeout(function(){
-            //    if (panel.caption == "Saved file " + path)
-            //        panel.removeAttribute("caption");
-            //}, 2500);
         });
+
         var at = page.$at
         at.undo_ptr = at.$undostack[at.$undostack.length-1];
         page.$at.dispatchEvent("afterchange");
         return false;
     },
-    
-    choosePath : function(path, select) {
-        var _self = this;
-        
-        fs.list(path.match(/(.*)\/[^/]*/)[1], function (data, state, extra) {
-            if (new RegExp("<folder.*" + path + ".*>").test(data)) {
-                path  = path.replace(/\/([^/]*)/g, "/node()[@name=\"$1\"]")
-                            .replace(/\[@name="workspace"\]/, "")
-                            .replace(/\//, "");
-                // console.log(path);
-                trSaveAs.expandList([path], function() {
-                    var node = trSaveAs.getModel().data.selectSingleNode(path);
-                     
-                    trSaveAs.select(node);
-                });
-            } else
-                _self.saveFileAs();
-        });
-    },
-    
-    saveas : function(){
-        var path = tabEditors.getPage().$model.data.getAttribute("path");
-        
-        ext.initExtension(this);
-        txtSaveAs.setValue(path);
-        this.choosePath(path.match(/(.*)\/[^/]/)[1]);
-        winSaveAs.show();
-    },
-    
-    saveFileAs : function(page) {
-        var page    = page || tabEditors.getPage(),
-            file    = page.$model.data,
-            path    = file.getAttribute("path"),
-            newPath = txtSaveAs.getValue();
-            
-        // check if we're already saving!
-        var saving = parseInt(file.getAttribute("saving"));
+
+    _saveAsNoUI: function(page, path, newPath) {
+        if (!page || !path)
+            return;
+
+        newPath = newPath || path;
+
+        var file = page.$model.data;
+        var saving = parseInt(file.getAttribute("saving"), 10);
+
         if (saving) {
             this.saveBuffer[path] = page;
             return;
         }
-        apf.b(file).attr("saving", "1");
+        apf.xmldb.setAttribute(node, "saving", "1");
+
+        var self = this;
+        var panel = sbMain.firstChild;
+        var value = page.$doc.getValue();
+        fs.saveFile(newPath, value, function(value, state, extra) {
+            if (state != apf.SUCCESS) {
+                util.alert("Could not save document",
+                  "An error occurred while saving this document",
+                  "Please see if your internet connection is available and try again.");
+            }
+            panel.setAttribute("caption", "Saved file " + newPath);
+
+            var model = page.$model;
+            var node = model.getXml();
+            var doc = page.$doc;
             
-        function onconfirm() {
-            var panel   = sbMain.firstChild,
-                value   = page.$doc.getValue();
-  
-            // console.log(value);
+            if (path !== newPath || parseInt(node.getAttribute("newfile") || 0, 10) === 1) {
+                model.load(node);
+                file = model.data;
+                fs.beforeRename(file, null, newPath, false);
+                doc.setNode(file);
+            }
+
+            apf.xmldb.removeAttribute(node, "saving");
+
+            if (self.saveBuffer[path]) {
+                delete self.saveBuffer[path];
+                self._saveAsNoUI(page);
+            }
+
+            if (parseInt(file.getAttribute("newfile") || "0", 10) === 1) {
+                apf.xmldb.removeAttribute(file, "newfile");
+                apf.xmldb.removeAttribute(file, "changed");
+                var xpath = newPath.replace(new RegExp("\/" + cloud9config.davPrefix.split("/")[1]), "")
+                                    .replace(new RegExp("\/" + file.getAttribute("name")), "")
+                                    .replace(/\/([^/]*)/g, "/node()[@name=\"$1\"]")
+                                    .replace(/\/node\(\)\[@name="workspace"\]/, "")
+                                    .replace(/\//, "");
+                if (xpath) {
+                    var oNode  = trFiles.queryNode(xpath);
+                    if (oNode && !trFiles.queryNode('//node()[@path="' + newPath + '"]'))
+                        apf.xmldb.appendChild(oNode, file);
+                }
+            }
+
+            ide.dispatchEvent("afterfilesave", {
+                node: node,
+                doc: doc,
+                value: value
+            });
+            ide.dispatchEvent("filecallback");            
+        });
+
+        var at = page.$at
+        at.undo_ptr = at.$undostack[at.$undostack.length-1];
+        page.$at.dispatchEvent("afterchange");
+    },
+
+    choosePath : function(path, select) {
+        fs.list((path.match(/(.*)\/[^/]*/) || {})[1] || path, function (data, state, extra) {
+            if (new RegExp("<folder.*" + path + ".*>").test(data)) {
+                path  = path.replace(new RegExp('\/' + cloud9config.davPrefix.split('/')[1]), '')
+                            .replace(/\/([^/]*)/g, "/node()[@name=\"$1\"]")
+                            .replace(/\/node\(\)\[@name="workspace"\]/, "")
+                            .replace(/\//, "");
+
+                trSaveAs.expandList([path], function() {
+                    var node = trSaveAs.getModel().data.selectSingleNode(path);
+                    trSaveAs.select(node);
+                });
+            }
+        });
+    },
+
+    // Function called from the 'Save As' menu dialog, and from the C9 CLI.
+    // It saves a file with a different name, involving UI.
+    saveas : function(page, callback){
+        if (!page || !page.$at)
+            page = tabEditors.getPage();
+
+        if (!page)
+            return;
+
+        var path = page ? page.$model.data.getAttribute("path") : false;
+        if (!path)
+            return;
+
+        ext.initExtension(this);
+
+        if (callback) {
+            var doc = page.$doc;
+            ide.addEventListener("afterfilesave", function(e){
+                if (e.doc == doc) {
+                    callback();
+                    this.removeEventListener("afterfilesave", arguments.callee);
+                }
+            });
+        }
+
+        var fooPath = path.split('/');
+        txtSaveAs.setValue(fooPath.pop());
+        lblPath.setProperty('caption', fooPath.join('/') + '/');
+        winSaveAs.show();
+    },
+
+    // Called by the UI 'confirm' button in winSaveAs.
+    confirmSaveAs : function(page) {
+        page = page || tabEditors.getPage();
+        var file = page.$model.data;
+        var path = file.getAttribute("path");
+        var newPath = lblPath.getProperty('caption') + txtSaveAs.getValue();
+
+        // check if we're already saving!
+        var saving = parseInt(file.getAttribute("saving"), 10);
+        if (saving) {
+            this.saveBuffer[path] = page;
+            return;
+        }
+        apf.xmldb.setAttribute(node, "saving", "1");
+
+        var self = this;
+        var doSave = function() {
             winConfirm.hide();
             winSaveAs.hide();
-            
-            panel.setAttribute("caption", "Saving file " + newPath);
-            fs.saveFile(newPath, value, function(value, state, extra) {
-                if (state != apf.SUCCESS) {
-                   util.alert("Could not save document",
-                              "An error occurred while saving this document",
-                              "Please see if your internet connection is available and try again.");
-                }
-                panel.setAttribute("caption", "Saved file " + newPath);
-                if (path != newPath) {
-                    var model = page.$model,
-                        node  = model.getXml();
-                        
-                    model.load(node);
-                    file = model.data;
-                    fs.beforeRename(file, null, newPath);
-                    page.$doc.setNode(file);
-                }
-                
-                apf.b(node).attr("saving", "0");
-                if (_self.saveBuffer[path]) {
-                    delete _self.saveBuffer[path];
-                    _self.saveFileAs(page);
-                }
-                //setTimeout(function () {
-                //  if (panel.caption == "Saved file " + newPath)
-                //       panel.removeAttribute("caption");
-                //}, 2500);
-            });
+            self._saveAsNoUI(page, path, newPath);
         };
-    
-        if (path != newPath) {
+
+        if (path !== newPath || parseInt(file.getAttribute("newfile") || 0, 10) === 1) {
             fs.exists(newPath, function (exists) {
                 if (exists) {
-                    var name    = newPath.match(/\/([^/]*)$/)[1],
-                        folder  = newPath.match(/\/([^/]*)\/[^/]*$/)[1];
-                    
+                    var name = newPath.match(/\/([^/]*)$/)[1];
+                    var folder = newPath.match(/\/([^/]*)\/[^/]*$/)[1];
+
                     util.confirm(
                         "Are you sure?",
                         "\"" + name + "\" already exists, do you want to replace it?",
                         "A file or folder with the same name already exists in the folder "
                         + folder + ". "
                         + "Replacing it will overwrite it's current contents.",
-                        onconfirm);
+                        doSave);
                 }
-                else
-                    onconfirm();
+                else {
+                    doSave();
+                }
             });
         }
-        else
-            onconfirm();
+        else {
+            doSave();
+        }
+    },
+
+    expandTree : function(){
+        var _self = this;
+        setTimeout(function(){
+            var tabPage = tabEditors.getPage(),
+                path    = tabPage ? tabPage.$model.data.getAttribute('path') : false,
+                isNew   = tabPage.$model.data.getAttribute('newfile');
+            if(!isNew)
+                _self.choosePath(path);
+            else
+                trSaveAs.slideOpen(null, trSaveAs.getModel().data.selectSingleNode('//folder'));
+        });
     },
 
     enable : function(){
@@ -353,5 +496,4 @@ return ext.register("ext/save/save", {
     }
 });
 
-    }
-);
+});

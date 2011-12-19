@@ -4,16 +4,17 @@
  * @copyright 2010, Ajax.org B.V.
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
-require.def("ext/searchreplace/searchreplace",
-    ["core/ide",
-     "core/ext",
-     "pilot/canon",
-     "ace/search",
-     "ext/editors/editors", 
-     "text!ext/searchreplace/searchreplace.xml"],
-    function(ide, ext, canon, search, editors, markup) {
 
-return ext.register("ext/searchreplace/searchreplace", {
+define(function(require, exports, module) {
+
+var ide = require("core/ide");
+var ext = require("core/ext");
+var code = require("ext/code/code");
+var search = require("ace/search");
+var editors = require("ext/editors/editors");
+var markup = require("text!ext/searchreplace/searchreplace.xml");
+
+module.exports = ext.register("ext/searchreplace/searchreplace", {
     name    : "Searchreplace",
     dev     : "Ajax.org",
     type    : ext.GENERAL,
@@ -45,17 +46,17 @@ return ext.register("ext/searchreplace/searchreplace", {
                 }
             }))
         );
-        
-        this.hotitems["search"] = [this.nodes[1]];
-        this.hotitems["searchreplace"] = [this.nodes[2]];
-        
-        canon.addCommand({
+
+        this.hotitems.search = [this.nodes[1]];
+        this.hotitems.searchreplace = [this.nodes[2]];
+
+        code.commandManager.addCommand({
             name: "replace",
-            exec: function(env, args, request) { 
-                _self.setEditor(env.editor, env.selection).toggleDialog(true, true);
+            exec: function(editor) {
+                _self.setEditor(editor, editor.getSelection()).toggleDialog(true, true);
             }
         });
-        
+
     },
 
     init : function(amlNode){
@@ -79,27 +80,30 @@ return ext.register("ext/searchreplace/searchreplace", {
 
     toggleDialog: function(isReplace, forceShow) {
         ext.initExtension(this);
-        
+
         if (!winSearchReplace.visible || forceShow || this.$lastState != isReplace) {
             this.setupDialog(isReplace);
 
-            var editor = editors.currentEditor;
             var value;
-            if (editor.ceEditor)
-                value = editor.ceEditor.getLastSearchOptions().needle;
-    
-            if (!value) {
-                var sel   = editor.getSelection();
-                var doc   = editor.getDocument();
-                var range = sel.getRange();
-                value = doc.getTextRange(range);
-            }
-            if (value)
-                this.txtFind.setValue(value);
+            var editor = editors.currentEditor;
 
-            winSearchReplace.setAttribute("title", isReplace
-                    ? "Search & Replace" : "Search");            
-            winSearchReplace.show();
+            if (editor) {
+                if (editor.ceEditor)
+                    value = editor.ceEditor.getLastSearchOptions().needle;
+
+                if (!value) {
+                    var sel   = editor.getSelection();
+                    var doc   = editor.getDocument();
+                    var range = sel.getRange();
+                    value = doc.getTextRange(range);
+                }
+                if (value)
+                    this.txtFind.setValue(value);
+
+                winSearchReplace.setAttribute("title", isReplace
+                        ? "Search & Replace" : "Search");
+                winSearchReplace.show();
+            }
         }
         else
             winSearchReplace.hide();
@@ -171,11 +175,9 @@ return ext.register("ext/searchreplace/searchreplace", {
             //     wholeWord: false,
             //     regExp: false
             // }
-            console.log(options);
             this.$editor.find(txt, options);
         }
         else {
-            console.log(options);
             this.$editor.find(txt, options);
         }
         chkSearchSelection.setAttribute("checked", false);
@@ -193,10 +195,11 @@ return ext.register("ext/searchreplace/searchreplace", {
             return;
         }
         var options = this.getOptions();
-        options.needle = this.txtFind.getValue()
+        options.needle = this.txtFind.getValue();
         options.scope = search.Search.SELECTION;
         this.$editor.replace(this.txtReplace.getValue() || "", options);
-        this.$editor.find(this.$crtSearch, options);
+        //this.$editor.find(this.$crtSearch, options);
+        this.findNext();
         ide.dispatchEvent("track_action", {type: "replace"});
     },
     
@@ -212,7 +215,7 @@ return ext.register("ext/searchreplace/searchreplace", {
             return;
         this.$crtSearch = null;
         var options = this.getOptions();
-        options.needle = this.txtFind.getValue()
+        options.needle = this.txtFind.getValue();
         this.$editor.replaceAll(this.txtReplace.getValue() || "", options);
         ide.dispatchEvent("track_action", {type: "replace"});
     },

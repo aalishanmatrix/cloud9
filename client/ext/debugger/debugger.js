@@ -7,21 +7,24 @@
  
 define(function(require, exports, module) {
 
+require("apf/elements/codeeditor");
+
 var ide = require("core/ide");
 var ext = require("core/ext");
 var editors = require("ext/editors/editors");
-var panels = require("ext/panels/panels");
 var dock   = require("ext/dockpanel/dockpanel");
 var fs = require("ext/filesystem/filesystem");
 var noderunner = require("ext/noderunner/noderunner");
 var markup = require("text!ext/debugger/debugger.xml");
+var inspector = require("ext/debugger/inspector");
+var settings = require("ext/settings/settings");
 
-return ext.register("ext/debugger/debugger", {
+module.exports = ext.register("ext/debugger/debugger", {
     name    : "Debug",
     dev     : "Ajax.org",
     type    : ext.GENERAL,
     alone   : true,
-    //offline : false,
+    offline : false,
     markup  : markup,
     buttonClassName : "debug1",
     deps    : [fs, noderunner],
@@ -33,12 +36,16 @@ return ext.register("ext/debugger/debugger", {
             }
         }
     },
-
+    
+    nodesAll: [],
     nodes : [],
+    hotitems: {},
 
     hook : function(){
+        var _self = this;
+        
         ide.addEventListener("consolecommand.debug", function(e) {
-            ide.socket.send(JSON.stringify({
+            ide.send(JSON.stringify({
                 command: "internal-isfile",
                 argv: e.data.argv,
                 cwd: e.data.cwd,
@@ -47,81 +54,139 @@ return ext.register("ext/debugger/debugger", {
             return false;
         });
         
-        var _self = this;
-        stDebugProcessRunning.addEventListener("activate", function() {            
-            _self.enable();
+        ide.addEventListener("loadsettings", function (e) {
+            // restore the breakpoints from the IDE settings
+            var bpFromIde = e.model.data.selectSingleNode("//breakpoints");
+            // not there yet, create element
+            if (!bpFromIde) {
+                bpFromIde = e.model.data.ownerDocument.createElement("breakpoints");
+                e.model.data.appendChild(bpFromIde);
+            }           
+            // bind it to the Breakpoint model
+            mdlDbgBreakpoints.load(bpFromIde);
+        });
+        
+        stDebugProcessRunning.addEventListener("activate", function() {
+            _self.activate();
         });
         stProcessRunning.addEventListener("deactivate", function() {
-            _self.disable();
+            _self.deactivate();
         });
         
         ide.addEventListener("afteropenfile", function(e) {
             var doc = e.doc;
             var node = e.node;
+            if (!node)
+                return;
             var path = node.getAttribute("path");
             
             node.setAttribute("scriptname", ide.workspaceDir + path.slice(ide.davPrefix.length));
         });
         
-        var sectionStack = dock.getSection("debugger-stack");
-        var sectionRest = dock.getSection("debugger-rest");
+        var name = "ext/debugger/debugger"; //this.name
         
-        dock.registerPage(sectionStack, null, function(){
-            ext.initExtension(_self);
-            return dbgCallStack;
-        }, {
+        dock.addDockable({
+            hidden  : false,
+            buttons : [
+                { caption: "Call Stack", ext : [name, "dbgCallStack"] }
+            ]
+        });
+        dock.addDockable({
+            hidden  : false,
+            buttons : [
+                { caption: "Interactive", ext : [name, "dbInteractive"] },
+                { caption: "Variables", ext : [name, "dbgVariable"] },
+                { caption: "Breakpoints", ext : [name, "dbgBreakpoints"] }
+            ]
+        });
+
+        dock.register(name, "dbgCallStack", {
+            menu : "Debugger/Call Stack",
             primary : {
-                backgroundImage: "/static/style/images/debugicons.png",
-                defaultState: { x: -6, y: -217 /*-46*/ },
+                backgroundImage: ide.staticPrefix + "/style/images/debugicons.png",
+                defaultState: { x: -6, y: -217 },
                 activeState: { x: -6, y: -217 }
-            },
+            }
+        }, function(type) {
+            ext.initExtension(_self);            
+            return dbgCallStack;
         });
         
-        dock.registerPage(sectionRest, null, function(){
+        dock.register(name, "dbInteractive", {
+            menu : "Debugger/Interactive",
+            primary : {
+                backgroundImage: ide.staticPrefix + "/style/images/debugicons.png",
+                defaultState: { x: -7, y: -310 },
+                activeState: { x: -7, y: -310 }
+            }
+        }, function(type) {
             ext.initExtension(_self);
             return dbInteractive;
-        }, {
-            primary : {
-                backgroundImage: "/static/style/images/debugicons.png",
-                defaultState: { x: -7, y: -310 /*-130*/ },
-                activeState: { x: -7, y: -310 }
-            },
         });
         
-        dock.registerPage(sectionRest, null, function(){
-            ext.initExtension(_self);
-            return dbgVariable;
-        }, {
+        dock.register(name, "dbgVariable", {
+            menu : "Debugger/Variables",
             primary : {
-                backgroundImage: "/static/style/images/debugicons.png",
-                defaultState: { x: -6, y: -261 /*-174*/ },
+                backgroundImage: ide.staticPrefix + "/style/images/debugicons.png",
+                defaultState: { x: -6, y: -261 },
                 activeState: { x: -6, y: -261 }
-            },
+            }
+        }, function(type) {
+            ext.initExtension(_self);
+            
+            // when visible -> make sure to refresh the grid
+            dbgVariable.addEventListener("prop.visible", function(e) {
+                if (e.value) {
+                    dgVars.reload();
+                }
+            });
+            
+            return dbgVariable;
         });
         
-        dock.registerPage(sectionRest, null, function(){
+        dock.register(name, "dbgBreakpoints", {
+            menu : "Debugger/Breakpoints",
+            primary : {
+                backgroundImage: ide.staticPrefix + "/style/images/debugicons.png",
+                defaultState: { x: -6, y: -360 },
+                activeState: { x: -6, y: -360 }
+            }
+        }, function(type) {
             ext.initExtension(_self);
             return dbgBreakpoints;
-        }, {
-            primary : {
-                backgroundImage: "/static/style/images/debugicons.png",
-                defaultState: { x: -6, y: -360 /*-88*/ },
-                activeState: { x: -6, y: -360 }
-            },
         });
     },
 
     init : function(amlNode){
         var _self = this;
 
+        while (tbDebug.childNodes.length) {
+            var button = tbDebug.firstChild;
+
+            if (button.nodeType == 1 && button.getAttribute("id") == "btnDebug")
+                ide.barTools.insertBefore(button, btnRun);
+            else
+                ide.barTools.appendChild(button);
+            
+            //collect all the elements that are normal nodes
+            if (button.nodeType == 1) {
+                this.nodesAll.push(button);
+            }
+        }
+
+        this.hotitems["resume"]   = [btnResume];
+        this.hotitems["stepinto"] = [btnStepInto];
+        this.hotitems["stepover"] = [btnStepOver];
+        this.hotitems["stepout"]  = [btnStepOut];
+
         this.paths = {};
-        
+
         mdlDbgSources.addEventListener("afterload", function() {
             _self.$syncTree();
         });
         mdlDbgSources.addEventListener("update", function(e) {
-            if (e.action != "add")
-                return;
+            if (e.action !== "add") return;
+            
             // TODO: optimize this!
             _self.$syncTree();
         });
@@ -136,40 +201,62 @@ return ext.register("ext/debugger/debugger", {
         dbg.addEventListener("changeframe", function(e) {
             e.data && _self.showDebugFile(e.data.getAttribute("scriptid"));
         });
-
-        lstBreakpoints.addEventListener("afterselect", function(e) {
-            if (e.selected && e.selected.getAttribute("scriptid"))
-                _self.showDebugFile(e.selected.getAttribute("scriptid"), parseInt(e.selected.getAttribute("line")) + 1);
-            // TODO sometimes we don't have a scriptID
-        });
         
-        lstScripts.addEventListener("afterselect", function(e) {
-            e.selected && require("ext/debugger/debugger").showDebugFile(e.selected.getAttribute("scriptid"));
+        dbgBreakpoints.addEventListener("afterrender", function(){
+            lstBreakpoints.addEventListener("afterselect", function(e) {
+                if (e.selected && e.selected.getAttribute("scriptid"))
+                    _self.showDebugFile(e.selected.getAttribute("scriptid"), 
+                        parseInt(e.selected.getAttribute("line"), 10) + 1);
+                // TODO sometimes we don't have a scriptID
+            });
+        });
+
+        dbgBreakpoints.addEventListener("dbInteractive", function(){
+            lstScripts.addEventListener("afterselect", function(e) {
+                e.selected && require("ext/debugger/debugger")
+                    .showDebugFile(e.selected.getAttribute("scriptid"));
+            });
         });
 
         ide.addEventListener("afterfilesave", function(e) {
             var node = e.node;
             var doc = e.doc;
-            
+
             var scriptId = node.getAttribute("scriptid");
             if (!scriptId)
                 return;
-                
+
             var value = e.value || doc.getValue();
-            var NODE_PREFIX = "(function (exports, require, module, __filename, __dirname) { "
+            var NODE_PREFIX = "(function (exports, require, module, __filename, __dirname) { ";
             var NODE_POSTFIX = "\n});";
             dbg.changeLive(scriptId, NODE_PREFIX + value + NODE_POSTFIX, false, function(e) {
                 //console.log("v8 updated", e);
             });
-        })
+        });
+        
+        // we're subsribing to the 'running active' prop
+        // this property indicates whether the debugger is actually running (when on a break this value is false)
+        stRunning.addEventListener("prop.active", function (e) {
+            // if we are really running (so not on a break or something)
+            if (e.value) {
+                // we clear out mdlDbgStack
+                mdlDbgStack.load("<frames></frames>");
+            }
+        });
     },
 
     showDebugFile : function(scriptId, row, column, text) {
         var file = fs.model.queryNode("//file[@scriptid='" + scriptId + "']");
+        
+        // check prerequisites
+        if (!ceEditor.$updateMarkerPrerequisite()) {
+            return;
+        }
 
         if (file) {
             editors.jump(file, row, column, text, null, true);
-        } else {
+        }
+        else {
             var script = mdlDbgSources.queryNode("//file[@scriptid='" + scriptId + "']");
             if (!script)
                 return;
@@ -177,7 +264,7 @@ return ext.register("ext/debugger/debugger", {
             var name = script.getAttribute("scriptname");
             var value = name.split("/").pop();
 
-            if (name.indexOf(ide.workspaceDir) == 0) {
+            if (name.indexOf(ide.workspaceDir) === 0) {
                 var path = ide.davPrefix + name.slice(ide.workspaceDir.length);
                 // TODO this has to be refactored to support multiple tabs
                 var page = tabEditors.getPage(path);
@@ -227,7 +314,7 @@ return ext.register("ext/debugger/debugger", {
         for (var i=0,l=dbgFiles.length; i<l; i++) {
             var dbgFile = dbgFiles[i];
             var name = dbgFile.getAttribute("scriptname");
-            if (name.indexOf(workspaceDir) != 0)
+            if (name.indexOf(workspaceDir) !== 0)
                 continue;
             this.paths[name] = dbgFile;
         }
@@ -246,8 +333,8 @@ return ext.register("ext/debugger/debugger", {
         }
         this.inSync = false;
     },
-
-    enable : function(){
+    
+    activate : function(){
         ext.initExtension(this);
         
         this.nodes.each(function(item){
@@ -256,14 +343,42 @@ return ext.register("ext/debugger/debugger", {
         });
     },
 
-    disable : function(){
+    deactivate : function(){
         this.nodes.each(function(item){
             if (item.hide)
                 item.hide();
         });
-        //log.disable(true);
+    },    
+    
+    enable : function(){
+        if (!this.disabled) return;
+        
+        this.nodesAll.each(function(item){            
+            item.setProperty("disabled", item.$lastDisabled !== undefined
+                ? item.$lastDisabled
+                : true);
+            delete item.$lastDisabled;
+        });
+        this.disabled = false;
     },
 
+    disable : function(){
+        if (this.disabled) return;
+        
+        //stop debugging
+        require('ext/run/run').stop();
+        this.deactivate();
+        
+        //loop from each item of the plugin and disable it
+        this.nodesAll.each(function(item){            
+            if (!item.$lastDisabled)
+                item.$lastDisabled = item.disabled;
+            item.disable();
+        });
+        
+        this.disabled = true;
+    },
+    
     destroy : function(){
         this.nodes.each(function(item){
             item.destroy(true, true);

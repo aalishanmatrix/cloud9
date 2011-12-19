@@ -4,19 +4,17 @@
  * @copyright 2010, Ajax.org B.V.
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
- 
+
 define(function(require, exports, module) {
- 
+
 var ide = require("core/ide");
 var ext = require("core/ext");
-var util = require("core/util");
-var fs = require("ext/filesystem/filesystem");
 var markup = require("text!ext/settings/settings.xml");
 var template = require("text!ext/settings/template.xml");
 var panels = require("ext/panels/panels");
 var skin = require("text!ext/settings/skin.xml");
 
-return ext.register("ext/settings/settings", {
+module.exports = ext.register("ext/settings/settings", {
     name    : "Preferences",
     dev     : "Ajax.org",
     alone   : true,
@@ -30,7 +28,7 @@ return ext.register("ext/settings/settings", {
 
     nodes : [],
 
-    save : function(){
+    save : function() {
         var _self = this;
         clearTimeout(this.$customSaveTimer);
 
@@ -40,12 +38,17 @@ return ext.register("ext/settings/settings", {
         }, 100);
     },
 
-    saveToFile : function(){
-        ide.socket.send(JSON.stringify({
+    saveToFile : function() {
+        var data = this.model.data && apf.xmldb.cleanXml(this.model.data.xml) || "";
+        ide.send(JSON.stringify({
             command: "settings",
             action: "set",
-            settings: this.model.data && apf.xmldb.cleanXml(this.model.data.xml) || ""
+            settings: data
         }));
+        ide.dispatchEvent("track_action", {
+            type: "save settings",
+            settings: data
+        });
     },
 
     saveSettingsPanel: function() {
@@ -86,17 +89,21 @@ return ext.register("ext/settings/settings", {
                         settings = template;
                     ide.settings =  settings;
                     _self.load();
-                    
+
                     ide.removeEventListener("socketMessage", arguments.callee);
                 }
             });
-
+            
             if (ide.onLine === true)
-                ide.socket.send(JSON.stringify({command: "settings", action: "get"}));
+                ide.send(JSON.stringify({command: "settings", action: "get"}));
             return;
         }
 
-        this.model.load(ide.settings);
+        try {
+            this.model.load(ide.settings);
+        } catch(e) {
+            this.model.load(template);
+        }
 
         ide.dispatchEvent("loadsettings", {
             model : _self.model
@@ -115,27 +122,27 @@ return ext.register("ext/settings/settings", {
         ide.addEventListener("$event.loadsettings", function(callback) {
             callback({model: _self.model});
         });
-        
+
         ide.removeEventListener("afteronline", this.$handleOnline);
     },
-    
+
     hook : function(){
         panels.register(this);
-        
+
         var btn = this.button = navbar.insertBefore(new apf.button({
             skin    : "mnubtn",
             state   : true,
             "class" : "preferences",
             caption : "Preferences"
         }), navbar.firstChild);
-        
+
         var _self = this;
 
         btn.addEventListener("mousedown", function(e){
             var value = this.value;
             if (navbar.current && (navbar.current != _self || value)) {
                 navbar.current.disable(navbar.current == _self);
-                if (value) 
+                if (value)
                     return;
             }
 
@@ -152,15 +159,15 @@ return ext.register("ext/settings/settings", {
 
     init : function(amlNode){
         this.panel = winSettings;
-        
+
         /*winSettings.addEventListener("hide", function(){
             colLeft.$ext.style.minWidth = "0px"; //hack
         });
-        
+
         winSettings.addEventListener("show", function() {
             colLeft.$ext.style.minWidth = "215px"; //hack
         });*/
-        
+
         colLeft.appendChild(winSettings);
     },
 
@@ -189,7 +196,7 @@ return ext.register("ext/settings/settings", {
             pages[i].$at.undo(-1);
         }
     },
-    
+
     enable : function(noButton){
         winSettings.show();
         colLeft.show();
@@ -198,7 +205,7 @@ return ext.register("ext/settings/settings", {
             if(navbar.current && (navbar.current != this))
                 navbar.current.disable(false);
         }
-        
+        splitterPanelLeft.show();
         navbar.current = this;
     },
 
@@ -207,6 +214,8 @@ return ext.register("ext/settings/settings", {
             winSettings.hide();
         if (!noButton)
             this.button.setValue(false);
+
+        splitterPanelLeft.hide();
     },
 
     destroy : function(){
@@ -217,5 +226,4 @@ return ext.register("ext/settings/settings", {
     }
 });
 
-    }
-);
+});

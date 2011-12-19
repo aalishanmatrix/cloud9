@@ -4,13 +4,15 @@
  * @copyright 2010, Ajax.org B.V.
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
-require.def("ext/openfiles/openfiles",
-    ["core/ide", "core/ext",
-     "ext/editors/editors", "ext/settings/settings",
-     "ext/panels/panels", "text!ext/openfiles/openfiles.xml"],
-    function(ide, ext, editors, settings, panels, markup) {
 
-return ext.register("ext/openfiles/openfiles", {
+define(function(require, exports, module) {
+
+var ide = require("core/ide");
+var ext = require("core/ext");
+var panels = require("ext/panels/panels");
+var markup = require("text!ext/openfiles/openfiles.xml");
+
+module.exports = ext.register("ext/openfiles/openfiles", {
     name            : "Active Files",
     dev             : "Ajax.org",
     alone           : true,
@@ -20,12 +22,14 @@ return ext.register("ext/openfiles/openfiles", {
     hook : function(){
         panels.register(this);
 
+        // Fix to prevent Active Files button is placed above Project Files
+        var el = (navbar.firstChild["class"] == "project_files") ? navbar.childNodes[1] : navbar.firstChild;
         var btn = this.button = navbar.insertBefore(new apf.button({
             skin    : "mnubtn",
             state   : "true",
             "class" : "open_files",
             caption : "Active Files"
-        }), navbar.firstChild);
+        }), el);
 
         var _self = this;
         var model = this.model = new apf.model().load("<files />");
@@ -45,8 +49,10 @@ return ext.register("ext/openfiles/openfiles", {
 
         ide.addEventListener("afteropenfile", function(e){
             var node = e.doc.getNode();
-            if (!model.queryNode("//node()[@path='" + node.getAttribute("path") + "']"))
-                model.appendXml(apf.getCleanCopy(node));
+            if (node) {
+                if (!model.queryNode("//node()[@path='" + node.getAttribute("path") + "']"))
+                    model.appendXml(apf.getCleanCopy(node));
+            }
         });
 
         ide.addEventListener("closefile", function(e){
@@ -90,7 +96,7 @@ return ext.register("ext/openfiles/openfiles", {
 
         tabEditors.addEventListener("afterswitch", function(e){
             var page = e.nextPage;
-            if (page) {
+            if (page && page.$model.data) {
                 var node = _self.model.queryNode("//node()[@path='" + page.$model.data.getAttribute("path") + "']");
                 if (node)
                     lstOpenFiles.select(node);
@@ -98,13 +104,17 @@ return ext.register("ext/openfiles/openfiles", {
         });
 
         ide.addEventListener("treechange", function(e) {
-            var path    = e.path.replace(/\/([^/]*)/g, "/node()[@name=\"$1\"]")
-                                .replace(/\[@name="workspace"\]/, "")
-                                .replace(/\//, ""),
-                parent  = trFiles.getModel().data.selectSingleNode(path),
-                nodes   = parent.childNodes,
-                files   = e.files,
-                removed = [];
+            var path = e.path
+                        .replace(/\/([^/]*)/g, "/node()[@name=\"$1\"]")
+                        .replace(/\[@name="workspace"\]/, "")
+                        .replace(/\//, "");
+            var parent = trFiles.getModel().data.selectSingleNode(path);
+            if (!parent)
+                return;
+
+            var nodes = parent.childNodes;
+            var files = e.files;
+            var removed = [];
 
             for (var i = 0; i < nodes.length; ++i) {
                 var node    = nodes[i],
@@ -122,27 +132,37 @@ return ext.register("ext/openfiles/openfiles", {
             path = parent.getAttribute("path");
             for (var name in files) {
                 var file = files[name];
-
-                xmlNode = "<" + file.type +
+                var xmlNode = "<" + file.type +
                     " type='" + file.type + "'" +
                     " name='" + name + "'" +
                     " path='" + path + "/" + name + "'" +
                 "/>";
-                // console.log("CREATE", xmlNode, parent);
                 trFiles.add(xmlNode, parent);
             }
         });
     },
 
+    show : function(){
+        if (navbar.current) {
+            if (navbar.current == this)
+                return;
+            navbar.current.disable();
+        }
+
+        panels.initPanel(this);
+        this.enable();
+    },
+
     enable : function(noButton){
-        winOpenFiles.show();
+        if (self.winOpenFiles)
+            winOpenFiles.show();
         colLeft.show();
         if (!noButton) {
             this.button.setValue(true);
             if(navbar.current && (navbar.current != this))
                 navbar.current.disable(false);
         }
-
+        splitterPanelLeft.show();
         navbar.current = this;
     },
 
@@ -151,6 +171,8 @@ return ext.register("ext/openfiles/openfiles", {
             winOpenFiles.hide();
         if (!noButton)
             this.button.setValue(false);
+
+        splitterPanelLeft.hide();
     },
 
     destroy : function(){

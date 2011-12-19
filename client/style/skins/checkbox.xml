@@ -9,7 +9,7 @@
         }
 
         .cbcontainer span {
-            font-family : Tahoma;
+            font-family : Tahoma, Arial;
             font-size   : 11px;
             cursor      : default;
             padding     : 1px 3px 2px 3px;
@@ -73,6 +73,31 @@
             <div class='cbcontainer'>
                 <div class='checkbox'> </div>
                 <span>-</span>
+            </div>
+        </a:main>
+    </a:presentation>
+</a:checkbox>
+<a:checkbox name="cboffline">
+    <a:style><![CDATA[
+        .cboffline {
+            width: 55px;
+            height: 21px;
+            background: url(images/sync.png) no-repeat 0 -21px;
+        }
+
+        .cbofflineDown {
+            background-position : 0 0px;
+        }
+
+        .cbofflineChecked {
+            background-position : 0 0px;
+        }
+    ]]></a:style>
+
+    <a:presentation>
+        <a:main>
+            <div class='cboffline'>
+            
             </div>
         </a:main>
     </a:presentation>

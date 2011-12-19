@@ -4,11 +4,15 @@
  * @copyright 2010, Ajax.org B.V.
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
-require.def("ext/editors/editors",
-    ["core/ide", "core/ext", "core/util", "ext/panels/panels"],
-    function(ide, ext, util, panels) {
 
-return ext.register("ext/editors/editors", {
+define(function(require, exports, module) {
+
+var ide = require("core/ide");
+var ext = require("core/ext");
+var util = require("core/util");
+var panels = require("ext/panels/panels");
+
+module.exports = ext.register("ext/editors/editors", {
     name    : "Editors",
     dev     : "Ajax.org",
     alone   : true,
@@ -19,7 +23,7 @@ return ext.register("ext/editors/editors", {
     contentTypes  : {},
 
     register : function(oExtension){
-        var id = "rb" + oExtension.path.replace(/\//g, "_");
+        //var id = "rb" + oExtension.path.replace(/\//g, "_");
 
         /*oExtension.$rbEditor = barButtons.appendChild(new apf.radiobutton({
             id        : id,
@@ -178,7 +182,6 @@ return ext.register("ext/editors/editors", {
 
     openEditor : function(doc, init, active) {
         var xmlNode  = doc.getNode();
-        var filename = xmlNode.getAttribute("name");
         var filepath = xmlNode.getAttribute("path");
 
         var page = tabEditors.getPage(filepath);

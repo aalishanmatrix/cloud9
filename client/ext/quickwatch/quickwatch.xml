@@ -6,8 +6,8 @@
       center    = "true"
       width     = "500" 
       height    = "350"
-      kbclose   = "true"
-      resizable = "true">
+      resizable = "true"
+      kbclose   = "true">
         <a:vbox anchors="0 0 0 0">
             <a:textbox id="txtCurObject" 
                 skin      = "tbempty" 
@@ -31,10 +31,10 @@
               loading-message = "Calculating..."
               onafterselect   = "
                 if (this.selected)
-                    txtCurObject.setValue(require('ext/console/console').calcName(this.selected, true));
+                    txtCurObject.setValue(require('ext/debugger/inspector').calcName(this.selected, true));
               "
               onbeforechange  = "
-                return require('ext/console/console').checkChange(event.args[0]);
+                return require('ext/debugger/inspector').checkChange(event.args[0]);
               ">
                 <a:model>
                     <vars />
@@ -44,10 +44,10 @@
                     <a:insert match="[item[@children]]" get="{adbg.loadObjects(dbg, %[.])}" />
                     <a:expanded match="[node()[@expand]]" />
                     <a:column caption="Property" value="{[@name] || 'Globals'}" width="120" icon="debugger/genericvariable_obj.gif" tree="true" />
-                    <a:column caption="Value" value="[@value]" width="100%" editor="textbox" />
+                    <a:column caption="Value" value="{apf.escapeXML([@value])}" width="100%" />
                     <a:column caption="Type" value="[@type]" width="80"/>
                 </a:each>
-                <a:change set="{require('ext/console/console').applyChange(xmlNode);}" />
+                <a:change set="{require('ext/debugger/inspector').applyChange(xmlNode);}" />
             </a:datagrid>
         </a:vbox>
     </a:window>

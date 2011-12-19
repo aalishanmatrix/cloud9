@@ -4,11 +4,12 @@
  * @copyright 2010, Ajax.org B.V.
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
-require.def("ext/undo/undo",
-    ["core/ide", "core/ext"],
-    function(ide, ext) {
 
-return ext.register("ext/undo/undo", {
+define(function(require, exports, module) {
+
+var ext = require("core/ext");
+ 
+module.exports = ext.register("ext/undo/undo", {
     dev    : "Ajax.org",
     name   : "Undo",
     alone  : true,
@@ -39,11 +40,15 @@ return ext.register("ext/undo/undo", {
     },
 
     undo: function() {
-        tabEditors.getPage().$at.undo();
+        var _tabPage;
+        if(_tabPage = tabEditors.getPage())
+            _tabPage.$at.undo();
     },
 
     redo: function() {
-        tabEditors.getPage().$at.redo();
+        var _tabPage;
+        if(_tabPage = tabEditors.getPage())
+            _tabPage.$at.redo();
     },
 
     enable : function(){
@@ -66,5 +71,4 @@ return ext.register("ext/undo/undo", {
     }
 });
 
-    }
-);
+});

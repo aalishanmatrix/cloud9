@@ -4,16 +4,15 @@
  * @copyright 2010, Ajax.org B.V.
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
- 
+
 define(function(require, exports, module) {
 
-var ide = require("core/ide");
 var ext = require("core/ext");
 var editors = require("ext/editors/editors");
 var noderunner = require("ext/noderunner/noderunner");
 var markup = require("text!ext/quickwatch/quickwatch.xml");
 
-return ext.register("ext/quickwatch/quickwatch", {
+module.exports = ext.register("ext/quickwatch/quickwatch", {
     name    : "quickwatch",
     dev     : "Ajax.org",
     type    : ext.GENERAL,
@@ -36,7 +35,7 @@ return ext.register("ext/quickwatch/quickwatch", {
                 if (!this.value.trim())
                     return dgWatch.clear();
 
-                require("ext/console/console").evaluate(this.value);
+                require("ext/debugger/inspector").evaluate(this.value);
             }
             else if (e.keyCode == 40 && dgWatch.length) {
                 var first = dgWatch.getFirstTraverseNode();
@@ -46,7 +45,7 @@ return ext.register("ext/quickwatch/quickwatch", {
                 }
             }
         });
-        
+
         var restricted = [38, 40, 36, 35];
         dgWatch.addEventListener("keydown", function(e) {
             if (e.keyCode == 38) {
@@ -61,10 +60,10 @@ return ext.register("ext/quickwatch/quickwatch", {
 
     toggleDialog: function(force, exec) {
         ext.initExtension(this);
-        
+
         if (!winQuickWatch.visible || force == 1) {
             var editor = editors.currentEditor;
-    
+
             var range;
             var sel   = editor.getSelection();
             var doc   = editor.getDocument();
@@ -79,7 +78,7 @@ return ext.register("ext/quickwatch/quickwatch", {
             if (value) {
                 txtCurObject.setValue(value);
                 if (exec) {
-                    require("ext/console/console").evaluate(value);
+                    require("ext/debugger/inspector").evaluate(value);
                     txtCurObject.focus();
                 }
             }

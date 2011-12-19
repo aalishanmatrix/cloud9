@@ -4,17 +4,15 @@
  * @copyright 2010, Ajax.org B.V.
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
-require.def("ext/gotofile/gotofile",
-    ["core/ide", 
-     "core/ext",
-     "ext/filesystem/filesystem", 
-     "ext/settings/settings",
-     "ext/tree/tree",
-     "ext/editors/editors",
-     "text!ext/gotofile/gotofile.xml"],
-    function(ide, ext, fs, settings, tree, editors, markup) {
-        
-return ext.register("ext/gotofile/gotofile", {
+
+define(function(require, exports, module) {
+
+var ide = require("core/ide");
+var ext = require("core/ext");
+var editors = require("ext/editors/editors");
+var markup = require("text!ext/gotofile/gotofile.xml");
+
+module.exports = ext.register("ext/gotofile/gotofile", {
     name    : "Filter Tree",
     dev     : "Ajax.org",
     alone   : true,
@@ -39,7 +37,7 @@ return ext.register("ext/gotofile/gotofile", {
                     _self.toggleDialog(true);
                 }
             }), mnuFile.firstChild),
-            
+
             ide.barTools.appendChild(new apf.button({
                 id      : "btnOpen",
                 icon    : "open.png",
@@ -51,7 +49,7 @@ return ext.register("ext/gotofile/gotofile", {
                 }
             }))
         );
-        
+
         this.hotitems["gotofile"] = [this.nodes[0]];
     },
 
@@ -60,7 +58,7 @@ return ext.register("ext/gotofile/gotofile", {
             if (txtGoToFile.value == "") {
                 return;
             }
-            
+
             if (e.keyCode == 13){
                 var node = trFiles.xmlRoot.selectSingleNode("folder[1]");
                 mdlGoToFile.load("{davProject.report('" + node.getAttribute("path")
@@ -75,7 +73,7 @@ return ext.register("ext/gotofile/gotofile", {
                 }
             }
         });
-        
+
         var restricted = [38, 40, 36, 35];
         dgGoToFile.addEventListener("keydown", function(e) {
             if (e.keyCode == 38) {
@@ -89,22 +87,23 @@ return ext.register("ext/gotofile/gotofile", {
 
         dgGoToFile.addEventListener("afterchoose", function(e) {
             winGoToFile.hide();
-            var path = ide.davPrefix + "/" + apf.getTextNode(e.xmlNode).nodeValue;
+            var path = ide.davPrefix.replace(/[\/]+$/, "") + "/"
+                + apf.getTextNode(e.xmlNode).nodeValue.replace(/^[\/]+/, "");
             editors.showFile(path, 0, 0);
             ide.dispatchEvent("track_action", {type: "fileopen"});
         });
-        
+
         this.nodes.push(winGoToFile);
     },
-    
+
     gotofile : function(){
         this.toggleDialog(true);
         return false;
     },
-    
+
     toggleDialog: function(forceShow) {
         ext.initExtension(this);
-        
+
         if (!winGoToFile.visible || forceShow)
             winGoToFile.show();
         else

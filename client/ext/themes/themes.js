@@ -4,11 +4,14 @@
  * @copyright 2010, Ajax.org B.V.
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
-require.def("ext/themes/themes",
-    ["core/ide", "core/ext", "core/util", "ext/editors/editors", "ext/settings/settings"],
-    function(ide, ext, util, editors, settings) {
 
-return ext.register("ext/themes/themes", {
+define(function(require, exports, module) {
+
+var ide = require("core/ide");
+var ext = require("core/ext");
+var settings = require("ext/settings/settings");
+
+module.exports = ext.register("ext/themes/themes", {
     name    : "Themes",
     dev     : "Ajax.org",
     alone   : true,
@@ -24,7 +27,7 @@ return ext.register("ext/themes/themes", {
                     type    : "radio",
                     value   : themes[name]
                 }))
-            )
+            );
         }
     },
 
@@ -32,11 +35,12 @@ return ext.register("ext/themes/themes", {
         //Save theme settings
         settings.model.setQueryValue("editors/code/@theme", path);
         settings.save();
+        ide.dispatchEvent("track_action", {type: "theme change", theme: path});
     },
 
     init : function(){
         var _self = this;
-        
+
         this.nodes.push(
             mnuView.appendChild(new apf.item({
                 caption : "Themes",

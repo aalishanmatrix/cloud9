@@ -44,7 +44,7 @@
             text-align          : center;
             color               : #474747;
             text-shadow         : rgba(255, 255, 255, .71) 0px 1px 0px;
-            font-family         : Trebuchet MS;
+            font-family         : Arial;
             font-size           : 14px;
             font-weight         : bold;
         }
@@ -525,6 +525,10 @@
             height             : 21px;
             width              : 22px;
         }
+        
+        .btn_icon_onlyDown.tabmenubtn {
+            z-index : 10000000;
+        }
 
         .dim14-14 {
             width: 14px;
@@ -908,7 +912,7 @@
         }
         
         .c9-menu-btn .c9-label {
-            font-family   : Tahoma;
+            font-family   : Tahoma, Arial;
             font-size     : 12px;
             line-height   : 14px;
             color         : #e8e8e8;
@@ -1218,7 +1222,7 @@
         }
         
         .mnubtn SPAN {
-            font-family         : Tahoma;
+            font-family         : Tahoma, Arial;
             font-size           : 10px;
             color               : #aaaaaa;
             text-align          : center;

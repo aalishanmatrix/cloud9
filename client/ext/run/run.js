@@ -14,7 +14,7 @@ var settings = require("ext/settings/settings");
 var save = require("ext/save/save");
 var markup = require("text!ext/run/run.xml");
 
-return ext.register("ext/run/run", {
+module.exports = ext.register("ext/run/run", {
     name    : "Run Toolbar",
     dev     : "Ajax.org",
     type    : ext.GENERAL,
@@ -28,23 +28,18 @@ return ext.register("ext/run/run", {
         "stepover" : {hint: "step over the current expression on the execution stack"},
         "stepout"  : {hint: "step out of the current function scope"}
     },
-    hotitems: {},
 
     nodes : [],
 
     init : function(amlNode){
         while(tbRun.childNodes.length) {
             var button = tbRun.firstChild;
+
             ide.barTools.appendChild(button);
-            
-            if (button.nodeType == 1)
+            if (button.nodeType == 1) {
                 this.nodes.push(button);
+            }
         }
-        
-        this.hotitems["resume"]   = [btnResume];
-        this.hotitems["stepinto"] = [btnStepInto];
-        this.hotitems["stepover"] = [btnStepOver];
-        this.hotitems["stepout"]  = [btnStepOut];
 
         var _self = this;
         mdlRunConfigurations.addEventListener("afterload", function(e) {
@@ -82,19 +77,24 @@ return ext.register("ext/run/run", {
 
     addConfig : function() {
         var file = ide.getActivePageModel();
+        var extension = "";
+        var path, name;
 
-        if (!file || (file.getAttribute("contenttype") || "").indexOf("application/javascript") != 0) {
-            var path = "";
-            var name = "server";
+        if (!file
+            || (file.getAttribute("contenttype") || "").indexOf("application/javascript") != 0
+            && (file.getAttribute("contenttype") || "").indexOf("text/x-script.python") != 0) {
+            path = "";
+            name = "server";
         }
         else {
-            path = file.getAttribute("path").slice(ide.davPrefix.length + 1);
-            name = file.getAttribute("name").replace(/\.js$/, "");
+            path  = file.getAttribute("path").slice(ide.davPrefix.length + 1);
+            name  = file.getAttribute("name").replace(/\.(js|py)$/, function(full, ext){ extension = ext; return ""; });
         }
 
         var cfg = apf.n("<config />")
             .attr("path", path)
             .attr("name", name)
+            .attr("extension", extension)
             .attr("args", "").node();
 
         var firstcfg = lstRunCfg.root.childNodes[0];
@@ -120,7 +120,9 @@ return ext.register("ext/run/run", {
         }
         else {
             this.runConfig(config, debug);
-            ide.dispatchEvent("track_action", {type: debug ? "debug" : "run"});
+            // track it!
+            config.type = debug ? "debug" : "run";
+            ide.dispatchEvent("track_action", config);
         }
     },
 
@@ -142,7 +144,7 @@ return ext.register("ext/run/run", {
                 menu.insertBefore(new apf.item({disabled:true, caption: "no run history"}), divider);
             else {
                 for (var i=0,l=configs.length; i<l; i++) {
-                    var item = new apf.item({
+                    item = new apf.item({
                         caption: configs[i].getAttribute("name")
                     });
                     item.$config = configs[i];
@@ -161,8 +163,8 @@ return ext.register("ext/run/run", {
     runConfig : function(config, debug) {
         var model = settings.model;
         var saveallbeforerun = model.queryValue("general/@saveallbeforerun");
-        if(saveallbeforerun) save.saveall();
-        
+        if (saveallbeforerun) save.saveall();
+
         if (debug === undefined)
             debug = config.parentNode.getAttribute("debug") == "1";
 
@@ -172,11 +174,12 @@ return ext.register("ext/run/run", {
 
     stop : function() {
         noderunner.stop();
+        ide.dispatchEvent("track_events", {type: "stop"});
     },
 
     enable : function(){
         if (!this.disabled) return;
-        
+
         this.nodes.each(function(item){
             item.setProperty("disabled", item.$lastDisabled !== undefined
                 ? item.$lastDisabled
@@ -188,7 +191,7 @@ return ext.register("ext/run/run", {
 
     disable : function(){
         if (this.disabled) return;
-        
+
         this.nodes.each(function(item){
             if (!item.$lastDisabled)
                 item.$lastDisabled = item.disabled;

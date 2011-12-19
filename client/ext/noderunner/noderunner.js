@@ -7,12 +7,15 @@
  
 define(function(require, exports, module) {
 
+require("apf/elements/debugger");
+require("apf/elements/debughost");
+
 var ide = require("core/ide");
 var ext = require("core/ext");
 var util = require("core/util");
 var markup = require("text!ext/noderunner/noderunner.xml");
 
-return ext.register("ext/noderunner/noderunner", {
+module.exports = ext.register("ext/noderunner/noderunner", {
     name    : "Node Runner",
     dev     : "Ajax.org",
     type    : ext.GENERAL,
@@ -40,7 +43,7 @@ return ext.register("ext/noderunner/noderunner", {
         stDebugProcessRunning.addEventListener("deactivate", this.$onDebugProcessDeactivate.bind(this));
 
         ide.addEventListener("consolecommand.run", function(e) {
-            ide.socket.send(JSON.stringify({
+            ide.send(JSON.stringify({
                 command: "internal-isfile",
                 argv: e.data.argv,
                 cwd: e.data.cwd,
@@ -60,7 +63,7 @@ return ext.register("ext/noderunner/noderunner", {
 
     onMessage : function(e) {
         var message = e.message;
-//        console.log("MSG", message)
+        //console.log("MSG", message)
 
         switch(message.type) {
             case "node-debug-ready":
@@ -77,9 +80,19 @@ return ext.register("ext/noderunner/noderunner", {
                 stProcessRunning.deactivate();
                 stDebugProcessRunning.deactivate();
                 break;
+                
+            case "node-exit-with-error":
+                stProcessRunning.deactivate();
+                stDebugProcessRunning.deactivate();
+
+                // TODO: is this the way to report an errror?
+                txtOutput.addValue("<div class='item console_log' style='font-weight:bold;color:#ff0000'>[C9 Server Exception: " 
+                        + message.errorMessage + "</div>");
+                break;
 
             case "state":
-                stDebugProcessRunning.setProperty("active", message.debugClient);
+                stDebugProcessRunning.setProperty("active", message.debugClient || message.nodeDebugClient);
+                stProcessRunning.setProperty("active", message.processRunning || message.nodeProcessRunning || message.pythonProcessRunning);
                 dbgNode.setProperty("strip", message.workspaceDir + "/");
                 ide.dispatchEvent("noderunnerready");
                 break;
@@ -89,12 +102,17 @@ return ext.register("ext/noderunner/noderunner", {
                     6:
                     401: Authorization Required
                 */
-                if (message.code !== 6 && message.code != 401) {
+                // Command error
+                if (message.code === 9) {
+                    txtConsole.addValue("<div class='item console_log' style='font-weight:bold;color:yellow'>"
+                        + message.message + "</div>");
+                }
+                else if (message.code !== 6 && message.code != 401 && message.code != 455 && message.code != 456) {
                     //util.alert("Server Error", "Server Error " 
                     //    + (message.code || ""), message.message);
-                    
+
                     txtConsole.addValue("<div class='item console_log' style='font-weight:bold;color:#ff0000'>[C9 Server Exception " 
-                        + (message.code || "") + "] " + message.message + "</div>");
+                        + (message.code || "") + "] " + message.message.message + "</div>");
                     
                     apf.ajax("/debug", {
                         method      : "POST",
@@ -109,9 +127,8 @@ return ext.register("ext/noderunner/noderunner", {
                     });
                 }
                 
-                ide.socket.send('{"command": "state"}');
+                ide.send('{"command": "state"}');
                 break;
-                
         }
     },
 
@@ -124,27 +141,28 @@ return ext.register("ext/noderunner/noderunner", {
             "command" : "RunDebugChrome",
             "file"    : ""
         };
-        ide.socket.send(JSON.stringify(command));
+        ide.send(JSON.stringify(command));
     },
 
     debug : function() {
         this.$run(true);
     },
 
-    run : function(path, args, debug) {        
-        if (stProcessRunning.active || !stServerConnected.active || !path || typeof path != "string")
+    run : function(path, args, debug) {      
+        if (stProcessRunning.active || !stServerConnected.active/* || (ddRunnerSelector.value=='gae' ? '' : !path)*/ || typeof path != "string")
             return false;
 
         var page = ide.getActivePageModel();
         var command = {
-            "command" : debug ? "RunDebugBrk" : "Run",
+            "command" : apf.isTrue(debug) ? "RunDebugBrk" : "Run",
             "file"    : path.replace(/^\/+/, ""),
+            "runner"  : "node", //ddRunnerSelector.value, // Explicit addition; trying to affect as less logic as possible for now...
             "args"    : args || "",
             "env"     : {
                 "C9_SELECTED_FILE": page ? page.getAttribute("path").slice(ide.davPrefix.length) : ""
             }
         };
-        ide.socket.send(JSON.stringify(command));
+        ide.send(JSON.stringify(command));
 
         if (debug)
             stDebugProcessRunning.activate();
@@ -154,9 +172,12 @@ return ext.register("ext/noderunner/noderunner", {
 
     stop : function() {
         if (!stProcessRunning.active)
-            return
+            return;
 
-        ide.socket.send(JSON.stringify({"command": "kill"}));
+        ide.send(JSON.stringify({
+            "command": "kill",
+            "runner"  : "node" //ddRunnerSelector.value // Explicit addition; trying to affect as less logic as possible for now...
+        }));
     },
 
     enable : function(){

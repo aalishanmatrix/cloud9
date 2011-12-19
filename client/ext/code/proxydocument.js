@@ -1,6 +1,6 @@
 define(function (require, exports, module) {
 
-var oop = require('pilot/oop');
+var oop = require('ace/lib/oop');
 var Document = require('ace/document').Document;
 
 var ProxyDocument = function (document) {
@@ -39,6 +39,10 @@ oop.inherits(ProxyDocument, Document);
 
     this.getLength = function () {
         return this.doc.getLength();
+    };
+
+    this.getLine = function (row) {
+        return this.doc.getLine(row);
     };
 
     this.getLines = function (startRow, endRow) {

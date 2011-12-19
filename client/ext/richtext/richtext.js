@@ -4,11 +4,13 @@
  * @copyright 2010, Ajax.org B.V.
  * @license GPLv3 <http://www.gnu.org/licenses/gpl.txt>
  */
-require.def("ext/richtext/richtext",
-    ["core/ide", "core/ext"],
-    function(ide, ext) {
 
-return ext.register("ext/richtext/richtext", {
+define(function(require, exports, module) {
+
+var ext = require("core/ext");
+var editors = require("ext/editors/editors");
+
+module.exports = ext.register("ext/richtext/richtext", {
     name    : "Rich Text Editor",
     dev     : "Ajax.org",
     type    : ext.EDITOR,
@@ -17,7 +19,7 @@ return ext.register("ext/richtext/richtext", {
         "application/xhtml+xml",
         "application/rtf"
     ],
-
+    deps    : [editors],
     nodes : [],
 
     init : function(amlPage){
@@ -63,5 +65,4 @@ return ext.register("ext/richtext/richtext", {
     }
 });
 
-    }
-);
+});
