@@ -41,6 +41,8 @@
               options    = "size|move"
               caching    = "false"
               model      = "mdlDbgStack"
+              class      = "noscrollbar"
+              scrollbar  = "sbShared 20 2 2"
               disabled   = "{!stDebugProcessRunning.active or stRunning.active}"
               selected   = "{dbg.activeframe}">
                 <a:actions />
@@ -106,15 +108,17 @@
             <a:datagrid id="dgVars"
               anchors    = "0 0 0 0" 
               border     = "0"
+              class      = "noscrollbar"
+              scrollbar  = "sbShared 20 2 2"
               options    = "size|move"
               prerender  = "false"
               caching    = "false"
-              model      = "[{dgStack.selected}::vars]"
+              model      = "[{dbg.activeframe}::vars]"
               disabled   = "{!stDebugProcessRunning.active or stRunning.active}"
               loading-message = "Calculating...">
                 <a:actions />
                 <a:each match="[item|globals]" sort="[@name]">
-                    <a:insert match="[globals]" get="{adbg.loadFrame(dbg, {dgStack.selected})}"/>
+                    <a:insert match="[globals]" get="{adbg.loadFrame(dbg, {dbg.activeframe})}"/>
                     <a:insert match="[item[@children='true']]" get="{adbg.loadObjects(dbg, %[.])}" />
                     <a:column caption="Property" value="{[@name] || 'Globals'}" width="40%" icon="debugger/genericvariable_obj.gif" tree="true" />
                     <a:column caption="Value" value="[@value]" width="60%" />
@@ -127,6 +131,8 @@
               autoselect = "false"
               reselectable = "true"
               anchors    = "0 0 0 0"
+              class      = "noscrollbar"
+              scrollbar  = "sbShared 2 2 2"
               border     = "0"
               model      = "mdlDbgBreakpoints"
               each       = "[breakpoint]"
@@ -141,6 +147,8 @@
               anchors    = "0 0 0 0" 
               border     = "0"
               options    = "size|move"
+              class      = "noscrollbar"
+              scrollbar  = "sbShared 20 2 2"
               prerender  = "false"
               caching    = "false"
               onafterchoose = "require('ext/debugger/debugger').goToAnnotation()"

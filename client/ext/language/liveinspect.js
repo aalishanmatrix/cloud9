@@ -63,7 +63,7 @@ module.exports = (function () {
             stDebugProcessRunning.addEventListener("prop.active", checkDebuggerActive);
             
             // when hovering over the inspector window we should ignore all further listeners
-            datagridHtml.addEventListener("mouseover", function () {
+            apf.addListener(datagridHtml, "mouseover", function() {
                 if (activeTimeout) {
                     clearTimeout(activeTimeout);
                 }
@@ -232,7 +232,7 @@ module.exports = (function () {
                 winLiveInspect.hide();
                 windowHtml.style.left = ev.pageX + "px";
                 windowHtml.style.top = (ev.pageY + 8) + "px";
-            }, 400);
+            }, 750);
         }
     };
     
@@ -275,7 +275,7 @@ module.exports = (function () {
             // otherwise hide it
             activeTimeout = setTimeout(function () {
                 winLiveInspect.hide();
-            }, 400);
+            }, 750);
         }
         else {
             // if not visible? then just clear the timeout

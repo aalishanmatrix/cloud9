@@ -22,7 +22,11 @@ module.exports = ext.register("ext/searchinfiles/searchinfiles", {
     alone    : true,
     offline  : false,
     markup   : markup,
-    skin     : skin,
+    skin     : {
+        id   : "searchinfiles",
+        data : skin,
+        "media-path" : ide.staticPrefix + "/ext/searchinfiles/images/"
+    },
     commands  : {
         "searchinfiles": {hint: "search for a string through all files in the current workspace"}
     },
@@ -89,7 +93,7 @@ module.exports = ext.register("ext/searchinfiles/searchinfiles", {
     },
 
     getSelectedTreeNode: function() {
-        var node = trFiles.selected;
+        var node = self["trFiles"] ? trFiles.selected : require("ext/filesystem/filesystem").model.queryNode("folder[1]");
         if (!node)
             node = trFiles.xmlRoot.selectSingleNode("folder[1]");
         while (node.tagName != "folder")
@@ -173,7 +177,7 @@ module.exports = ext.register("ext/searchinfiles/searchinfiles", {
             this.$model.addEventListener("afterload", function() {
                 tabConsole.set(_self.pageID);
             });
-            
+
             this.$panel.addEventListener("afterclose", function(){
                 this.removeNode();
                 return false;
@@ -193,12 +197,10 @@ module.exports = ext.register("ext/searchinfiles/searchinfiles", {
         _self.$model.clear();
         trSFResult.setAttribute("empty-message", "Searching for '" + findValueSanitized + "'...");
         davProject.report(node.getAttribute("path"), "codesearch", this.getOptions(), function(data, state, extra){
-            if (state !== apf.SUCCESS)
-                return;
-            if (!parseInt(data.getAttribute("count"), 10))
-                trSFResult.setAttribute("empty-message", "No results found for '" + findValueSanitized + "'");
-            else
-                _self.$model.load(data);
+            if (state !== apf.SUCCESS || !parseInt(data.getAttribute("count"), 10))
+                return trSFResult.setAttribute("empty-message", "No results found for '" + findValueSanitized + "'");;
+
+            _self.$model.load(data);
         });
 
         ide.dispatchEvent("track_action", {type: "searchinfiles"});

@@ -93,6 +93,8 @@ module.exports = ext.register("ext/runpanel/runpanel", {
                 
                 e.model.setQueryValue("general/@saveallbeforerun", false);
             }
+            if (!e.model.queryNode("auto/configurations/@debug"))
+                e.model.setQueryValue("auto/configurations/@debug", true);
             if (!e.model.queryNode("auto/configurations/@autohide"))
                 e.model.setQueryValue("auto/configurations/@autohide", true);
 
@@ -119,7 +121,7 @@ module.exports = ext.register("ext/runpanel/runpanel", {
         
         var page = tabEditors.getPage();
         if (page) {
-            var path = page.$model.queryValue("@path").replace(/^\/workspace\//, "");
+            var path = page.$model.queryValue("@path").replace(ide.davPrefix, "");
             mdlRunConfigurations.setQueryValue("config[@curfile]/@path", path);
             mdlRunConfigurations.setQueryValue("config[@curfile]/@name", 
                 path.split("/").pop() + " (active file)");
@@ -127,18 +129,20 @@ module.exports = ext.register("ext/runpanel/runpanel", {
         
         tabEditors.addEventListener("afterswitch", function(e){
             var page = e.nextPage;
-            var path = page.$model.queryValue("@path").replace(/^\/workspace\//, "");
+            var path = page.$model.queryValue("@path").replace(ide.davPrefix, "");
             mdlRunConfigurations.setQueryValue("config[@curfile]/@path", path);
             mdlRunConfigurations.setQueryValue("config[@curfile]/@name", 
                 path.split("/").pop() + " (active file)");
         });
         
+        var hasBreaked = false;
         stProcessRunning.addEventListener("deactivate", function(){
             if (!_self.autoHidePanel())
                 return;
             
             var name = "ext/debugger/debugger";
             dock.hideSection(name, false);
+            hasBreaked = false;
             
             /*var bar = dock.getBars("ext/debugger/debugger", "pgDebugNav")[0];
             if (!bar.extended)
@@ -153,8 +157,10 @@ module.exports = ext.register("ext/runpanel/runpanel", {
                 dock.showBar(bar); 
         });*/
         ide.addEventListener("break", function(){
-            if (!_self.shouldRunInDebugMode() || !_self.autoHidePanel())
+            if (!_self.shouldRunInDebugMode() || !_self.autoHidePanel() || hasBreaked)
                 return;
+            
+            hasBreaked = true;
             
             var name = "ext/debugger/debugger";
             dock.showSection(name, false);

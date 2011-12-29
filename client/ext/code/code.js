@@ -97,6 +97,7 @@ var contentTypes = {
     "html": "text/html",
     "xhtml": "application/xhtml+xml",
     "coffee": "text/x-script.coffeescript",
+    "*Cakefile": "text/x-script.coffeescript",
     "py": "text/x-script.python",
 
     "ru": "text/x-script.ruby",
@@ -165,8 +166,8 @@ module.exports = ext.register("ext/code/code", {
 
         var sel = doc.getSelection();
         return {
-            scrolltop  : ceEditor.$editor.renderer.getScrollTop(),
-            scrollleft : ceEditor.$editor.renderer.getScrollLeft(),
+            scrolltop  : doc.getScrollTop(),
+            scrollleft : doc.getScrollLeft(),
             selection  : sel.getRange(),
             folds      : folds
         };
@@ -181,8 +182,9 @@ module.exports = ext.register("ext/code/code", {
 
         //are those 3 lines set the values in per document base or are global for editor
         sel.setSelectionRange(state.selection, false);
-        ceEditor.$editor.renderer.scrollToY(state.scrolltop);
-        ceEditor.$editor.renderer.scrollToX(state.scrollleft);
+        
+        aceDoc.setScrollTop(state.scrolltop);
+        aceDoc.setScrollLeft(state.scrollleft);
 
         if (state.folds) {
             for (var i = 0, l=state.folds.length; i < l; i++) {
@@ -335,6 +337,21 @@ module.exports = ext.register("ext/code/code", {
         ide.addEventListener("afteropenfile", function(e) {
             if (_self.setState)
                 _self.setState(e.doc, e.doc.state);
+                
+            if (e.doc && e.doc.editor && e.doc.editor.ceEditor) {
+                // check if there is a scriptid, if not check if the file is somewhere in the stack
+                if (!e.node.getAttribute("scriptid") && mdlDbgStack && mdlDbgStack.data) {
+                    var nodes = mdlDbgStack.data.selectNodes("//frame[@script='" + e.node.getAttribute("scriptname").replace(ide.workspaceDir + "/", "") + "']");
+                    if (nodes.length) {
+                        e.node.setAttribute("scriptid", nodes[0].getAttribute("scriptid"));
+                    }
+                }
+                e.doc.editor.ceEditor.afterOpenFile(e.doc.editor.ceEditor.getSession());
+            }
+        });
+        
+        tabEditors.addEventListener("afterswitch", function(e) {
+            ceEditor.afterOpenFile(ceEditor.getSession());
         });
         
         // preload common language modes
@@ -377,7 +394,7 @@ module.exports = ext.register("ext/code/code", {
             mnuView.appendChild(new apf.item({
                 type    : "check",
                 caption : "Wrap Lines",
-                checked : "[{require('ext/settings/settings').model}::editors/code/@wrapmode]"
+                checked : "{ceEditor.wrapmode}"
             }))
         );
 
