@@ -10,7 +10,6 @@ define(function(require, exports, module) {
  
  var ide = require("core/ide");
  var ext = require("core/ext");
- var console = require("ext/console/console");
  var markup = require("text!ext/android_wizard/android_wizard.xml");
   
 module.exports = ext.register("ext/android_wizard/android_wizard", {
@@ -53,6 +52,36 @@ module.exports = ext.register("ext/android_wizard/android_wizard", {
         winAndroidWizard.onclose = function() {
             ceEditor.focus();
         };
+        
+        ide.addEventListener("socketDisconnect", this.onDisconnect.bind(this));
+        ide.addEventListener("socketMessage", this.onMessage.bind(this));
+        
+        dbgNode.addEventListener("onsocketfind", function() {
+            return ide.socket;
+        });
+        
+        ide.addEventListener("consolecommand.android_wizard", function(e) {
+            ide.send(JSON.stringify({
+                command: "internal-isfile",
+                argv: e.data.argv,
+                cwd: e.data.cwd,
+                sender: "android_wizard"
+            }));
+            return false;
+        });        
+    },
+    
+    onMessage : function(e) {
+        var message = e.message;
+        console.log("MSG", message);
+        if (message.type === "android_wizard_complete") {
+                console.log('got test-return');
+                stProcessRunning.deactivate();
+        }
+    },
+    
+    onDisconnect : function() {
+        stDebugProcessRunning.deactivate();
     },
 
     toggleDialog: function(forceShow, data) {
@@ -96,20 +125,20 @@ module.exports = ext.register("ext/android_wizard/android_wizard", {
 
     execCreate: function() {
         winAndroidWizard.hide();
-        // show the console (also used by the debugger):
-        console.enable();
 
-        // show the tab
-        tabConsole.set(this.pageID);
-       
+        if (stProcessRunning.active || !stServerConnected.active) {
+            console.log('android_wizard: cannot create project when another process is running or the server is disconnected');
+            return false;
+        }
+
         var data = {
             command : "android_wizard",
             cwd: ide.workspaceDir,
             options : this.getOptions()
         };            
         
-        ide.socket.send(JSON.stringify(data));        
-        ide.dispatchEvent("track_action", {type: "android_wizard"});
+        ide.send(JSON.stringify(data));  
+        stProcessRunning.activate();
     },
 
     enable : function(){

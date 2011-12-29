@@ -31,9 +31,7 @@ sys.inherits(AndroidWizardPlugin, Plugin);
          * project spec
          */
             
-        var cmd = "android";
         var args = [];
-        var i = 0;
         args[0] = "create";
         args[1] = "project";
         args[2] = "--target";
@@ -54,6 +52,7 @@ sys.inherits(AndroidWizardPlugin, Plugin);
             if (code === 0 && phonegap_callback) {  // If success and making PhoneGap project
                 phonegap_callback(code, err, out, phonegap_self);
             } else {
+                _self.ide.broadcast(JSON.stringify({"type": "android_wizard_complete"}), this.name);
                 _self.sendResult(0, message.command, {
                     code: code,
                     argv: message.argv,
