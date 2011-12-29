@@ -54,6 +54,7 @@ sys.inherits(cloud9WatcherPlugin, Plugin);
 
         if (!message || message.command != "watcher") 
             return false;
+
         with (message) {
             if (command != "watcher")
                 return false;
@@ -103,7 +104,7 @@ sys.inherits(cloud9WatcherPlugin, Plugin);
                         that.send({
                             "type"      : "watcher",
                             "subtype"   : subtype,
-                            "path"      : path,
+                            "path"      : path.replace(/\/$/, ""),
                             "files"     : files,
                             "lastmod"   : curr.mtime
                         });
