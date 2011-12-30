@@ -30,7 +30,7 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
         var _self = this;
         var android_message = message;
         android_message.command = "android_wizard";
-        this.ide.exts.android_wizard.command(user, android_message, client, this.afterAndroid, _self);
+        this.ide.workspace.execHook("command", user, android_message, client, this.afterAndroid, _self);
     };
     
     this.afterAndroid = function(code, err, out, _self) {
@@ -236,6 +236,7 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
             filenames.forEach(function (filename) {
                 if (filename.indexOf("drawable") === 0) total++;  
             });
+            if (total === 0) _self.register(_self); // #9 success  -- TODO sort out why no drawables - update to latest AppLaud logic
             filenames.forEach(function (filename) {  
                 if (filename.indexOf("drawable") === 0) {     
                     var fullname = _self.projectDir + '/res/' + filename + '/icon.png';
@@ -251,7 +252,7 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
         });
     };  
     this.log = function(_self, str) {
-        console.log(str);
+        console.log('phonegap_wizard error log:' + str);
         if (_self.errorLogged === false) {  // Just send first failure back to client
             _self.errorLogged = true;
             _self.sendResult(0, "phonegap_wizard", {
@@ -269,6 +270,7 @@ sys.inherits(PhonegapWizardPlugin, Plugin);
                 code: 1 //end
             });
         }
+//        console.log ('successCount ' + _self.successCount);
     };
         
 }).call(PhonegapWizardPlugin.prototype);
