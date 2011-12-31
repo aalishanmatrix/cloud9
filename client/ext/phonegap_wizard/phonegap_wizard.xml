@@ -2,7 +2,7 @@
 	
     <a:window id="winPhonegapWizard"
       onhide="require('ext/phonegap_wizard/phonegap_wizard').onHide()"
-      title="Configure PhoneGap Project"
+      title="PhoneGap Project Creation Wizard"
       buttons="close" 
       modal="false" 
       center="true" 
@@ -14,49 +14,34 @@
                 <a:label width="95">Project Name</a:label>
                 <a:textbox id="txtPWProjectName" flex="1" focusselect="true"/>
             </a:hbox>                
-             
-            <a:hbox align="center"> 
-            <a:vbox edge="10" padding="5">
-                <a:label>PhoneGap Location</a:label>
-                <a:hbox>
-                <a:fieldset flex="1">
-                    <a:radiobutton group="grpPWConfig" skin="classic" checked="true" value="builtin" label="Use Built-in PhoneGap - version 0.9.4" />
-                    <a:radiobutton group="grpPWConfig" skin="classic" checked="false" value="github" label="Enter PhoneGap GitHub location" />
-                    <a:radiobutton group="grpPWConfig" skin="classic" checked="false" value="choose" label="Enter path to PhoneGap zipfile" />
-                </a:fieldset>
-                </a:hbox>
-                <a:hbox  >
-                    <input id="inpPWPgFile" type="file" visible="{grpPWConfig.value == 'choose'}" />
-                </a:hbox>
-            </a:vbox>
-            </a:hbox>
             
-            <a:checkbox id="chkIncludeJqm" label="Include jQuery Mobile" />
+<!--            <a:checkbox id="chkIncludeJqm" label="Include jQuery Mobile" /> -->
             
             <a:hbox align="center">
-                <a:label width="95">Build Target</a:label>
-                <a:dropdown id="ddPWTarget" flex2="1" autoselect="true" maxitems="10" width="213" height="21">
-                    <a:item value="4">Android 2.2</a:item>
-                    <a:item value="5">Android 2.3</a:item>
-                    <a:item value="6">Android 3.0</a:item>
+                <a:label width="95">Minimum Version</a:label>
+                <a:dropdown id="ddPWMinSdk" flex2="1" autoselect="true" maxitems="10" width="213" height="21">
+                    <a:item value="android-7" selected="selected">Android 2.1</a:item>
+					<a:item value="android-8">Android 2.2</a:item>
+					<a:item value="android-9">Android 2.3</a:item>
+					<a:item value="android-11">Android 3.0</a:item>
+					<a:item value="android-12">Android 3.1</a:item>
+					<a:item value="android-13">Android 3.2</a:item>
+					<a:item value="android-15">Android 4.0</a:item>
                 </a:dropdown>
             </a:hbox>
             
             <a:hbox align="center">
-                <a:label width="95">Application Name</a:label>
-                <a:textbox id="txtPWAppName" value='app_{txtPWProjectName.value}' flex="1"/>
+                <a:label width="95">Project Template</a:label>
+                <a:dropdown id="ddPWTemplate" flex2="1" autoselect="true" maxitems="10" width="213" height="21">
+                    <a:item value="pgdemo" selected="selected">PhoneGap Demo</a:item>
+    				<a:item value="pgdemojQM">PhoneGap Demo with jQuery Mobile</a:item>
+                </a:dropdown>
             </a:hbox>
                 
             <a:hbox align="center">
                 <a:label width="95">Package Name</a:label>
                 <a:textbox id="txtPWPackageName" value="com.example.{txtPWProjectName.value}" flex="1"/>
-            </a:hbox>
-            
-            <a:hbox align="center">
-                <a:label width="95">Create Activity</a:label>
-                <a:textbox id="txtPWActivity" value="activity_{txtPWProjectName.value}" flex="1"/>
-  <!--                  <a:textbox id="txtPWActivity" value="activy{document.getElementById('inpPWPgFile').value}" flex="1"/>/-->
-            </a:hbox>             
+            </a:hbox>           
 
         </a:vbox>
         <a:divider />

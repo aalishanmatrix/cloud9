@@ -19,6 +19,7 @@ sys.inherits(AndroidWizardPlugin, Plugin);
 (function() {
     
     this.command = function(user, message, client, phonegap_callback, phonegap_self) {
+//        console.log('android_wizard' + JSON.stringify(message));
         if (message.command !== "android_wizard")
             return false;
             
@@ -35,15 +36,17 @@ sys.inherits(AndroidWizardPlugin, Plugin);
         args[0] = "create";
         args[1] = "project";
         args[2] = "--target";
-        args[3] = message.options.target;
-        args[4] = "--name";
-        args[5] = message.options.appName;
-        args[6] = "--path";
-        args[7] = message.cwd + '/' + message.options.projectName;
-        args[8] = "--activity";
-        args[9] = message.options.activity;
-        args[10] = "--package";
-        args[11] = message.options.packageName;
+        args[3] = phonegap_self ? 'android-15' : message.options.target;
+        args[4] = "--path";
+        args[5] = message.cwd + '/' + message.options.projectName;
+        args[6] = "--activity";
+        args[7] = message.options.activity;
+        args[8] = "--package";
+        args[9] = message.options.packageName;
+        if (message.options.appName) {
+            args[10] = "--name";
+            args[11] = message.options.appName;
+        }
         
         /* TODO manage minSDK */
             

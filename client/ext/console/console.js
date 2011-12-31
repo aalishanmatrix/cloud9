@@ -371,9 +371,6 @@ module.exports = ext.register("ext/console/console", {
                         Logger.logNodeStream(res.err);
                     if (res.code) // End of command
                         Logger.log("", "divider");
-                    if (res.phonegapName) {
-                        editors.showFile('/workspace/' + res.phonegapName + '/assets/www/index.html');
-                }
                 }
                 break;
         }
@@ -499,7 +496,7 @@ module.exports = ext.register("ext/console/console", {
 
             ++needle;
             while (needle >= 0 && !(cmdTrie = cmdTries[parser.argv.slice(0, needle).join("-")]))
-                --needle;
+                --needle
 
             if (cmdTrie) {
                 base = parser.argv[needle];
@@ -588,6 +585,7 @@ module.exports = ext.register("ext/console/console", {
 
     init : function(amlNode){
         var _self = this;
+        
         this.panel = tabConsole;
         this.$cwd  = "/workspace";
 
@@ -820,4 +818,3 @@ module.exports = ext.register("ext/console/console", {
 });
 
 });
-

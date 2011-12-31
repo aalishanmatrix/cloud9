@@ -14,17 +14,17 @@ var toggleLocation = function() {
     var suc = function(p) {
         jQuery("#loctext").empty();
                 
-        var text = "<div class=\"locdata\">Latitude: " + p.coords.latitude
-                + "<br/>" + "Longitude: " + p.coords.longitude + "<br/>"
-                + "Accuracy: " + p.coords.accuracy + "m<br/>" + "</div>";
+        var text = "<div class=\"locdata\">Latitude: " + p.coords.latitude +
+                "<br/>" + "Longitude: " + p.coords.longitude + "<br/>" +
+                "Accuracy: " + p.coords.accuracy + "m<br/>" + "</div>";
         jQuery("#locdata").append(text);
 
-        var image_url = "http://maps.google.com/maps/api/staticmap?sensor=false&center="
-                + p.coords.latitude
-                + ","
-                + p.coords.longitude
-                + "&zoom=13&size=280x175&markers=color:blue|"
-                + p.coords.latitude + ',' + p.coords.longitude;
+        var image_url = "http://maps.google.com/maps/api/staticmap?sensor=false&center=" +
+                p.coords.latitude +
+                "," +
+                p.coords.longitude +
+                "&zoom=13&size=280x175&markers=color:blue|" +
+                p.coords.latitude + ',' + p.coords.longitude;
 
         jQuery("#map").remove();
         jQuery("#loccontainer").append(
@@ -131,7 +131,7 @@ function fail(msg) {
 
 function show_pic() {
     navigator.camera.getPicture(dump_pic, fail, {
-        quality : 50
+        quality : 30
     });
 }
 
@@ -152,9 +152,8 @@ function writeFile() {
 }
 
 function contacts_success(contacts) {
-    alert(contacts.length
-            + ' contacts returned.'
-            + (contacts[2] && contacts[2].name &&
+    alert(contacts.length + ' contacts returned.' +
+            (contacts[2] && contacts[2].name &&
                contacts[2].name.formatted ? (' Third contact is ' + contacts[2].name.formatted)
                     : ''));
 }
@@ -163,28 +162,44 @@ function get_contacts() {
     var obj = new ContactFindOptions();
     obj.filter = "";
     obj.multiple = true;
-    obj.limit = 5;
-    navigator.service.contacts.find(
+    navigator.contacts.find(
             [ "displayName", "name" ], contacts_success,
             fail, obj);
 }
 
-var networkReachableCallback = function(reachability) {
-    // There is no consistency on the format of reachability
-    var networkState = reachability.code || reachability;
+function check_network() {
+    var networkState = navigator.network.connection.type;
 
-    var currentState = {};
-    currentState[NetworkStatus.NOT_REACHABLE] = 'No network connection';
-    currentState[NetworkStatus.REACHABLE_VIA_CARRIER_DATA_NETWORK] = 'Carrier data connection';
-    currentState[NetworkStatus.REACHABLE_VIA_WIFI_NETWORK] = 'WiFi connection';
+    var states = {};
+    states[Connection.UNKNOWN]  = 'Unknown connection';
+    states[Connection.ETHERNET] = 'Ethernet connection';
+    states[Connection.WIFI]     = 'WiFi connection';
+    states[Connection.CELL_2G]  = 'Cell 2G connection';
+    states[Connection.CELL_3G]  = 'Cell 3G connection';
+    states[Connection.CELL_4G]  = 'Cell 4G connection';
+    states[Connection.NONE]     = 'No network connection';
 
-    confirm("Connection type:\n" + currentState[networkState]);
-};
+    confirm('Connection type:\n ' + states[networkState]);
+}
 
-var check_network = function() {
-    navigator.network.isReachable("www.mobiledevelopersolutions.com",
-            networkReachableCallback, {});
-};
+var compassWatch = null;
+
+function updateHeading(h) {
+    document.getElementById('h').innerHTML = h.magneticHeading;
+}
+
+function toggleCompass() {
+    if (compassWatch !== null) {
+        navigator.compass.clearWatch(compassWatch);
+        compassWatch = null;
+        updateHeading({ magneticHeading : ""});
+    } else {        
+        var options = { frequency: 1000 };
+        compassWatch = navigator.compass.watchHeading(updateHeading, function(e) {
+            alert('Compass Error: ' + e.code);
+        }, options);
+    }
+}
 
 function init() {
     // the next line makes it impossible to see Contacts on the HTC Evo since it
@@ -203,4 +218,10 @@ function init() {
     }).live('collapse', function() {
         toggleLocation();
     });
+    
+    $("#compassmenu").live('expand', function() {
+        toggleCompass();
+    }).live('collapse', function() {
+        toggleCompass();
+    });    
 }
