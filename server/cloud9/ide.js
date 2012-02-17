@@ -36,7 +36,9 @@ var Ide = module.exports = function(options, httpServer, exts, socket) {
     this.options = {
         workspaceDir: this.workspaceDir,
         mountDir: options.mountDir || this.workspaceDir,
+        socketIoUrl: options.socketIoUrl || "socket.io",
         davPrefix: options.davPrefix || (baseUrl + "/workspace"),
+        davPlugins: options.davPlugins || exports.DEFAULT_DAVPLUGINS,
         baseUrl: baseUrl,
         debug: options.debug === true,
         staticUrl: staticUrl,
@@ -58,6 +60,7 @@ var Ide = module.exports = function(options, httpServer, exts, socket) {
     var davOptions = {
         node: this.options.mountDir,
         mount: this.options.davPrefix,
+        plugins: this.options.davPlugins,
         server: this.httpServer,
         standalone: false
     };
@@ -110,6 +113,7 @@ Ide.DEFAULT_PLUGINS = [
     "ext/android_wizard/android_wizard",
     "ext/android_run/android_run",
     "ext/phonegap_wizard/phonegap_wizard",
+    "ext/help/help",
     //"ext/ftp/ftp",
     "ext/code/code",
     "ext/imgview/imgview",
@@ -120,24 +124,33 @@ Ide.DEFAULT_PLUGINS = [
     "ext/debugger/debugger", //Add location rule
     "ext/noderunner/noderunner", //Add location rule
     "ext/console/console",
+    "ext/consolehints/consolehints",
     "ext/tabbehaviors/tabbehaviors",
     "ext/tabsessions/tabsessions",
     "ext/keybindings/keybindings",
+    "ext/keybindings_default/keybindings_default",
     "ext/watcher/watcher",
     "ext/dragdrop/dragdrop",
     "ext/beautify/beautify",
     "ext/offline/offline",
     "ext/stripws/stripws",
     "ext/testpanel/testpanel",
-    "ext/nodeunit/nodeunit", 
+    "ext/nodeunit/nodeunit",
     "ext/zen/zen",
     "ext/codecomplete/codecomplete",
     //"ext/autosave/autosave",
     "ext/vim/vim",
-    "ext/jslanguage/jslanguage"
-    //"ext/autotest/autotest"
+    "ext/guidedtour/guidedtour",
+    "ext/quickstart/quickstart",
+    "ext/jslanguage/jslanguage",
+    "ext/autotest/autotest",
+    "ext/tabsessions/tabsessions",
+    "ext/codetools/codetools",
+    "ext/colorpicker/colorpicker"
     //"ext/acebugs/acebugs"
 ];
+
+exports.DEFAULT_DAVPLUGINS = ["auth", "codesearch", "filelist", "filesearch"];
 
 (function () {
 
@@ -210,6 +223,7 @@ Ide.DEFAULT_PLUGINS = [
                 workspaceDir: _self.options.workspaceDir,
                 debug: _self.options.debug,
                 staticUrl: staticUrl,
+                socketIoUrl: _self.options.socketIoUrl,
                 sessionId: req.sessionID, // set by connect
                 workspaceId: _self.options.workspaceId,
                 plugins: Object.keys(plugins),
@@ -323,10 +337,17 @@ Ide.DEFAULT_PLUGINS = [
     };
 
     this.broadcast = function(msg, scope) {
-        // TODO check permissions
-        for (var username in this.$users) {
-            var user = this.$users[username];
-            user.broadcast(msg, scope);
+        try {
+            // TODO check permissions
+            for (var username in this.$users) {
+                var user = this.$users[username];
+                user.broadcast(msg, scope);
+            }
+        }
+        catch (e) {
+            var ex = new Error("Stack overflow just happened");
+            ex.original = e;
+            throw ex;
         }
     };
 

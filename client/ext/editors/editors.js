@@ -112,6 +112,7 @@ module.exports = ext.register("ext/editors/editors", {
                     },
                     childNodes : [
                         btn = new apf.button({
+                            id : "plus_tab_button",
                             style : "display:inline-block;margin: 0 0 5px 13px;",
                             right : 5,
                             top   : 8,
@@ -453,12 +454,20 @@ module.exports = ext.register("ext/editors/editors", {
             editorPage = tabEditors.getPage(page.type);
         if (!editorPage) return;
 
+        // fire this event BEFORE editor sessions are swapped.
+        ide.dispatchEvent("beforeeditorswitch", {
+            previousPage: e.previousPage,
+            nextPage: e.nextPage
+        });
+
         if (editorPage.model != page.$model)
             editorPage.setAttribute("model", page.$model);
         if (editorPage.actiontracker != page.$at)
             editorPage.setAttribute("actiontracker", page.$at);
 
-        page.$editor.setDocument && page.$editor.setDocument(page.$doc, page.$at);
+        if (page.$editor && page.$editor.setDocument) {
+            page.$editor.setDocument(page.$doc, page.$at);
+        }
 
         ide.dispatchEvent("editorswitch", {
             previousPage: e.previousPage,
@@ -643,6 +652,9 @@ module.exports = ext.register("ext/editors/editors", {
 
                 pNode = apf.createNodeFromXpath(e.model.data, "auto/files");
                 for (var i = 0, l = pages.length; i < l; i++) {
+                    if(!pages[i] || !pages[i].$model)
+                        continue;
+                        
                     var file = pages[i].$model.data;
                     if (!file || file.getAttribute("debug"))
                         continue;
